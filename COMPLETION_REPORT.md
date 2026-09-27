@@ -4,7 +4,7 @@
 **Guide:** `FFT_Unified_Guide.md` v1.0 (compiled 2026-09-25) — treated as the authoritative content list
 **Game:** Crownfall Tactics v1.1.0 · Generated 2026-09-27 · Built by Muse Spark (Muse Code powered by Meta Muse Spark)
 
-**Changelog v1.0.0 → v1.1.0** (guide-gap pass): 10 → 17 story battles (Thieves Fort, Zirekile Falls, Golgorand, Yardow, Bethla, Igros, Murond Death City); 10 → 14 jobs (Time Mage, Ninja, Samurai, Geomancer); 42 → 70 abilities (Time/Throw/Draw Out/Elemental/Holy Sword/Limit/extra chemist goods + 7 monster arts); 24 → 44 equipment (+ chapter-4 shop tier); 7 → 14 monsters (chocobos, panther, dragon, mindflare, ghoul, hydra); 7 → 13 statuses (Haste, Stop, Sleep, Protect, Shell, Regen); new systems — facing/back attacks, poaching, dispatch propositions, soldier hiring, Move-Find-Item caches; new story recruit Aveline (Holy Sword).
+**Changelog v1.0.0 → v1.1.0** (guide-gap pass): 10 → 20 story battles (Thieves Fort, Zirekile Falls, Golgorand, Yardow, Bethla, Igros, Murond Death City, Riovanes split into I/II/III, Limberry Undercroft); 10 → 14 jobs (Time Mage, Ninja, Samurai, Geomancer); 42 → 70 abilities (Time/Throw/Draw Out/Elemental/Holy Sword/Limit/extra chemist goods + 7 monster arts); 24 → 44 equipment (+ chapter-4 shop tier); 7 → 14 monsters (chocobos, panther, dragon, mindflare, ghoul, hydra); 7 → 13 statuses (Haste, Stop, Sleep, Protect, Shell, Regen); new systems — facing/back attacks, poaching, dispatch propositions, soldier hiring, Move-Find-Item caches; new story recruit Aveline (Holy Sword).
 
 ## 1. Source checklist → where it appears
 
@@ -21,9 +21,10 @@
 | Golgorand Execution Site rescue | Battle “Golgorand Execution Site” (executioners + guards) |
 | Chapter boss blocking the pass | Battle “Fovoham Plains” — boss: Thunder Regent |
 | Lesalia / undercity route | Battle “Lesalia Aqueducts” (water channels, thieves, cactuars; Aveline joins after) |
-| Riovanes Castle multi-level duel vs dark knight | Battle “Riovanes Castle” — boss: Fell Knight |
+| Riovanes Castle I/II/III (gate, duel, rooftop) | Battles “Riovanes Castle Gate”, “Riovanes Ramparts” (boss: Fell Knight), “Riovanes Rooftop” (war chocobos) |
 | Yardow Fort City turncoat fight | Battle “Yardow Fort City” (ninja + time mage enemies) |
 | Limberry Castle crypt fights | Battle “Limberry Castle” (skeletons, crypt wizards) |
+| Limberry depths boss | Battle “Limberry Undercroft” — boss: High Seraph |
 | Bethla Garrison bridge stand | Battle “Bethla Garrison” (samurai saints, dragoon, summoner) |
 | Igros Castle last stand + red chocobo | Battle “Igros Castle” (geomancers, guard, Red Chocobo) |
 | Nelveska Temple — Worker 7 New | Battle “Nelveska Temple” — boss: Worker 7 (big toy machina) |

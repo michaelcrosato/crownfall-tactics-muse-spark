@@ -309,8 +309,8 @@ describe('hiring and dispatches', () => {
 });
 
 describe('new content integrity', () => {
-  it('covers 17 battles and 14 jobs', () => {
-    assert.ok(BATTLES.length >= 17);
+  it('covers 20 battles and 14 jobs', () => {
+    assert.ok(BATTLES.length >= 20);
     assert.ok(Object.keys(JOBS).length >= 14);
     assert.ok(Object.keys(ABILITIES).length >= 65);
     assert.ok(Object.keys(MONSTERS).length >= 13);
