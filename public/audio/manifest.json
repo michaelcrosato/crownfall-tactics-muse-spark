@@ -1,0 +1,32 @@
+{
+  "name": "Crownfall Tactics placeholder audio manifest",
+  "version": 1,
+  "notes": "Single manifest for ALL game audio. Every entry lists a local file plus the placeholder source it stands in for. To ship original audio, replace the files (or remap the file fields) — no code changes needed. If a file is missing or undecodable, the engine falls back to synthesized WebAudio placeholders so the game stays playable.",
+  "music": [
+    { "id": "title", "file": "audio/music-title.ogg", "source": "Final Fantasy Tactics — Title Back (placeholder). Intended source: https://sounds.spriters-resource.com/ (Final Fantasy Tactics PS1 section) / https://www.zophar.net/ (FFT PS1 rips).", "loop": true },
+    { "id": "worldmap", "file": "audio/music-worldmap.ogg", "source": "Final Fantasy Tactics — World Map theme (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/.", "loop": true },
+    { "id": "battle", "file": "audio/music-battle.ogg", "source": "Final Fantasy Tactics — Random Battle theme (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/.", "loop": true },
+    { "id": "boss", "file": "audio/music-boss.ogg", "source": "Final Fantasy Tactics — Boss battle theme (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/.", "loop": true },
+    { "id": "victory", "file": "audio/music-victory.ogg", "source": "Final Fantasy Tactics — Victory fanfare (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/.", "loop": false },
+    { "id": "defeat", "file": "audio/music-defeat.ogg", "source": "Final Fantasy Tactics — Game Over theme (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/.", "loop": false },
+    { "id": "ending", "file": "audio/music-ending.ogg", "source": "Final Fantasy Tactics — Ending theme (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/.", "loop": true }
+  ],
+  "sfx": [
+    { "id": "cursor", "file": "audio/sfx-cursor.ogg", "source": "FFT menu cursor blip (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "confirm", "file": "audio/sfx-confirm.ogg", "source": "FFT menu confirm (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "cancel", "file": "audio/sfx-cancel.ogg", "source": "FFT menu cancel (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "step", "file": "audio/sfx-step.ogg", "source": "FFT unit step tick (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "hit", "file": "audio/sfx-hit.ogg", "source": "FFT physical hit (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "miss", "file": "audio/sfx-miss.ogg", "source": "FFT evade whoosh (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "fire", "file": "audio/sfx-fire.ogg", "source": "FFT Fire spell (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "ice", "file": "audio/sfx-ice.ogg", "source": "FFT Blizzard spell (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "bolt", "file": "audio/sfx-bolt.ogg", "source": "FFT Thunder spell (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "cure", "file": "audio/sfx-cure.ogg", "source": "FFT Cure spell (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "potion", "file": "audio/sfx-potion.ogg", "source": "FFT Chemist item throw (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "bow", "file": "audio/sfx-bow.ogg", "source": "FFT Archer bow shot (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "ko", "file": "audio/sfx-ko.ogg", "source": "FFT unit KO / crystal (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "levelup", "file": "audio/sfx-levelup.ogg", "source": "FFT level-up jingle (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "pickup", "file": "audio/sfx-pickup.ogg", "source": "FFT treasure pickup (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." },
+    { "id": "gil", "file": "audio/sfx-gil.ogg", "source": "FFT gil reward chime (placeholder). Intended source: https://sounds.spriters-resource.com/ / https://www.zophar.net/." }
+  ]
+}

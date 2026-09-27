@@ -1,0 +1,23 @@
+{
+  "name": "crownfall-tactics-muse-spark",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Crownfall Tactics — an original low-poly tactical RPG inspired by Final Fantasy Tactics (PS1).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test tests/combat.test.js tests/simulate.test.js"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "0.14.0",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "vite": "6.3.5"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}
