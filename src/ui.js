@@ -1,8 +1,8 @@
 // Screens: title, controls, options, story, world map, shop, party, deploy,
 // battle HUD, results, game over, ending. DOM only; no Three.js here.
 import { BUILD_INFO } from './config.js';
-import { JOBS, EQUIPMENT, ABILITIES, STORY, SHOP_STOCK, SHOP_STOCK_CH3 } from './data.js';
-import { jobUnlocked, computeStats, learnCost } from './state.js';
+import { JOBS, EQUIPMENT, ABILITIES, STORY, SHOP_STOCK, SHOP_STOCK_CH3, SHOP_STOCK_CH4, PROPOSITIONS } from './data.js';
+import { jobUnlocked, computeStats, learnCost, hireCost } from './state.js';
 
 function el(html) {
   const t = document.createElement('template');
@@ -83,6 +83,7 @@ export class UI {
       </table>
       <p class="dim">Touch: tap tiles to move and target. Drag to orbit. Pinch to zoom. Every decision from the desktop game is available on touch.</p>
       <p class="dim">Charge times (CTR): casters recover more slowly after big spells — shown as negative CT in the AT list. KO'd units crystallize after 3 rounds unless revived.</p>
+      <p class="dim">Facing matters: the arrow by a unit's name shows where it looks. Striking from behind deals +30% and cannot miss. Thieves poach felled monsters for goods — sometimes rare ones. Some battlefields hide Move-Find-Item caches: end a move on the right tile.</p>
       <div class="btn-row"><button class="primary" data-a="back">Back</button></div>
     </div></div>`);
     s.querySelector('[data-a="back"]').onclick = () => { this.click('cancel'); onBack(); };
@@ -150,7 +151,7 @@ export class UI {
   }
 
   // ---------- world map ----------
-  showWorld(campaign, battles, errands, { onBattle, onErrand, onShop, onParty, onOptions, onTitle }) {
+  showWorld(campaign, battles, errands, { onBattle, onErrand, onShop, onParty, onTavern, onOptions, onTitle }) {
     this.clear();
     const cur = battles[campaign.battleIndex];
     const chapter = cur ? cur.chapter : 4;
@@ -180,14 +181,16 @@ export class UI {
         <button class="primary" data-a="fight" ${cur ? '' : 'disabled'}>To Battle: ${cur ? escapeHtml(cur.name) : '—'}</button>
         <button data-a="shop">Shop</button>
         <button data-a="party">Party</button>
+        <button data-a="tavern">Tavern</button>
         <button data-a="options">Options</button>
         <button data-a="title">Title</button>
       </div>
-      <p class="dim">Progress saves automatically after each battle. Shop stocks improve in Chapter 3.</p>
+      <p class="dim">Progress saves automatically after each battle. Shop stocks improve in Chapters 3–4. The tavern hires soldiers and posts dispatch commissions.</p>
     </div></div>`);
     s.querySelector('[data-a="fight"]').onclick = () => { this.click(); onBattle(); };
     s.querySelector('[data-a="shop"]').onclick = () => { this.click('cursor'); onShop(); };
     s.querySelector('[data-a="party"]').onclick = () => { this.click('cursor'); onParty(); };
+    s.querySelector('[data-a="tavern"]').onclick = () => { this.click('cursor'); onTavern(); };
     s.querySelector('[data-a="options"]').onclick = () => { this.click('cursor'); onOptions(); };
     s.querySelector('[data-a="title"]').onclick = () => { this.click('cancel'); onTitle(); };
     s.querySelectorAll('[data-e]').forEach((n) => {
@@ -203,7 +206,7 @@ export class UI {
   // ---------- shop ----------
   showShop(campaign, chapter, { onBuy, onBack }) {
     this.clear();
-    const stock = [...SHOP_STOCK, ...(chapter >= 3 ? SHOP_STOCK_CH3 : [])];
+    const stock = [...SHOP_STOCK, ...(chapter >= 3 ? SHOP_STOCK_CH3 : []), ...(chapter >= 4 ? SHOP_STOCK_CH4 : [])];
     const items = stock.map((id) => EQUIPMENT[id]);
     const s = el(`<div class="screen"><div class="panel">
       <h2>Outfitter</h2>
@@ -237,8 +240,60 @@ export class UI {
     this.root.appendChild(s);
   }
 
+  // ---------- tavern ----------
+  showTavern(campaign, { onHire, onDispatch, onBack }) {
+    this.clear();
+    const cost = hireCost(campaign.battleIndex);
+    const offers = campaign.hireOffers || [];
+    const reserves = campaign.reserves || [];
+    const away = campaign.dispatches || [];
+    const s = el(`<div class="screen"><div class="panel">
+      <h2>Tavern Hall</h2>
+      <div class="spread"><span>Gil: <b style="color:var(--gold)">${campaign.gil} G</b></span>
+      <span class="dim">Hire: ${cost} G each</span></div>
+      <div class="chapter-banner">Swords for hire</div>
+      ${offers.map((o, i) => `
+        <div class="shop-item"><div class="inf">
+          <div class="n">${escapeHtml(o.name)} — Lv ${o.level} ${JOBS[o.job].name} (${o.gender})</div>
+          <div class="d">Joins the reserves. Promote from the Party screen.</div>
+        </div><button data-hire="${i}" ${campaign.gil >= cost ? '' : 'disabled'}>Hire</button></div>`).join('')}
+      <div class="chapter-banner">Dispatch commissions</div>
+      <p class="dim">Send a reserve soldier away for N completed battles. They return with gil, goods, and JP.</p>
+      ${reserves.length === 0 ? '<p class="dim">No reserves waiting. Hire swords above.</p>' : reserves.map((u) => `
+        <div class="shop-item"><div class="inf">
+          <div class="n">${escapeHtml(u.name)} — Lv ${u.level} ${JOBS[u.job].name}</div>
+          <div class="d"><select data-prop="${u.uid}">
+            ${PROPOSITIONS.map((p) => `<option value="${p.id}">${escapeHtml(p.name)} — ${p.days} battle${p.days > 1 ? 's' : ''}, Lv ${p.minLevel}+, ${p.gil} G + ${p.jp} JP</option>`).join('')}
+          </select></div>
+        </div><button data-send="${u.uid}">Send</button></div>`).join('')}
+      ${away.length ? `<div class="chapter-banner">Away</div>` + away.map((d) => {
+        const p = PROPOSITIONS.find((x) => x.id === d.propId);
+        return `<div class="shop-item"><div class="inf"><div class="n">${escapeHtml(d.name)} — ${escapeHtml(p ? p.name : d.propId)}</div>
+          <div class="d">Returns in ${d.battlesLeft} battle${d.battlesLeft > 1 ? 's' : ''}.</div></div></div>`;
+      }).join('') : ''}
+      <div class="btn-row"><button class="primary" data-a="back">Back to Map</button></div>
+    </div></div>`);
+    s.querySelectorAll('[data-hire]').forEach((b) => {
+      b.onclick = () => {
+        const u = onHire(+b.dataset.hire);
+        if (u) { this.click('gil'); this.toast(`${u.name} joined the reserves!`); this.showTavern(campaign, { onHire, onDispatch, onBack }); }
+        else { this.click('cancel'); this.toast('Not enough gil.'); }
+      };
+    });
+    s.querySelectorAll('[data-send]').forEach((b) => {
+      b.onclick = () => {
+        const propId = s.querySelector(`[data-prop="${b.dataset.send}"]`).value;
+        const err = onDispatch(+b.dataset.send, propId);
+        if (!err) { this.click(); this.showTavern(campaign, { onHire, onDispatch, onBack }); }
+        else { this.click('cancel'); this.toast(err); }
+      };
+    });
+    s.querySelector('[data-a="back"]').onclick = () => { this.click('cancel'); onBack(); };
+    this.root.appendChild(s);
+  }
+
   // ---------- party ----------
-  showParty(campaign, { onJob, onEquip, onLearn, onBack }) {
+  showParty(campaign, { onJob, onEquip, onLearn, onPromote, onBack }) {
     this.clear();
     const s = el(`<div class="screen"><div class="panel">
       <h2>Company</h2>
@@ -279,6 +334,12 @@ export class UI {
         }).join('')}
       </div>
       <p class="dim">Changing jobs keeps learned JP. Equipment comes from the company stores — anything you have bought can be worn by anyone who can equip it.</p>
+      <div class="chapter-banner">Reserves (${(campaign.reserves || []).length})</div>
+      ${(campaign.reserves || []).length === 0 ? '<p class="dim">No reserves. Hire soldiers at the tavern.</p>' : (campaign.reserves || []).map((u) => `
+        <div class="shop-item"><div class="inf">
+          <div class="n">${escapeHtml(u.name)} — Lv ${u.level} ${JOBS[u.job].name}</div>
+          <div class="d">HP ${u.maxHp} · PA ${u.pa} MA ${u.ma} SP ${u.sp}</div>
+        </div><button data-promote="${u.uid}" ${campaign.party.length >= 8 ? 'disabled' : ''}>To Party</button></div>`).join('')}
       <div class="btn-row"><button class="primary" data-a="back">Back to Map</button></div>
     </div></div>`);
     const refreshEq = (uid) => {
@@ -323,7 +384,19 @@ export class UI {
           sel.value = u.job;
         } else {
           this.click();
-          this.showParty(campaign, { onJob, onEquip, onLearn, onBack });
+          this.showParty(campaign, { onJob, onEquip, onLearn, onPromote, onBack });
+        }
+      };
+    });
+    s.querySelectorAll('[data-promote]').forEach((btn) => {
+      btn.onclick = () => {
+        const ok = onPromote(+btn.dataset.promote);
+        if (ok) {
+          this.click();
+          this.showParty(campaign, { onJob, onEquip, onLearn, onPromote, onBack });
+        } else {
+          this.click('cancel');
+          this.toast('The party is full (8).');
         }
       };
     });
@@ -333,7 +406,7 @@ export class UI {
         const ok = onLearn(+wrap.dataset.train, btn.dataset.learn);
         if (ok) {
           this.click('levelup');
-          this.showParty(campaign, { onJob, onEquip, onLearn, onBack });
+          this.showParty(campaign, { onJob, onEquip, onLearn, onPromote, onBack });
         } else {
           this.click('cancel');
           this.toast('Not enough JP in the current job.');
@@ -485,8 +558,9 @@ class BattleHud {
   showCard(unit) {
     this.card.style.display = '';
     const sts = Object.keys(unit.statuses || {});
+    const face = unit.fx === 1 ? '▶' : unit.fx === -1 ? '◀' : unit.fz === 1 ? '▼' : '▲';
     this.card.innerHTML = `
-      <div class="nm">${escapeHtml(unit.name)}</div>
+      <div class="nm">${escapeHtml(unit.name)} <span style="color:var(--gold)" title="Facing — back attacks hurt">${face}</span></div>
       <div class="bar-label">${unit.monster ? 'Monster' : JOBS[unit.job].name} Lv ${unit.level}${unit.boss ? ' · BOSS' : ''}</div>
       <div class="bars">
         <div class="bar-label">HP ${unit.hp}/${unit.maxHp}</div>

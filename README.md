@@ -4,7 +4,7 @@ An original low-poly, brick-built tactical RPG inspired by **Final Fantasy Tacti
 
 - **Generated:** 2026-09-27
 - **Built by:** Muse Spark (Muse Code powered by Meta Muse Spark)
-- **Version:** 1.0.0 (internal test build)
+- **Version:** 1.1.0 (internal test build)
 
 ## Play
 
@@ -20,7 +20,7 @@ Desktop and touch are both supported: click/tap tiles to move and target, drag t
 ## Build & deploy
 
 ```sh
-npm test          # 17 headless logic + simulation tests (Node built-in runner)
+npm test          # 34 headless logic + simulation tests (Node built-in runner)
 npm run build     # standard Vite build to dist/
 npm run preview   # serve the production build locally
 ```

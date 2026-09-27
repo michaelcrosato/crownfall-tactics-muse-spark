@@ -2,7 +2,9 @@
 
 **Source:** Final Fantasy Tactics (PS1, original English release)
 **Guide:** `FFT_Unified_Guide.md` v1.0 (compiled 2026-09-25) — treated as the authoritative content list
-**Game:** Crownfall Tactics v1.0.0 · Generated 2026-09-27 · Built by Muse Spark (Muse Code powered by Meta Muse Spark)
+**Game:** Crownfall Tactics v1.1.0 · Generated 2026-09-27 · Built by Muse Spark (Muse Code powered by Meta Muse Spark)
+
+**Changelog v1.0.0 → v1.1.0** (guide-gap pass): 10 → 17 story battles (Thieves Fort, Zirekile Falls, Golgorand, Yardow, Bethla, Igros, Murond Death City); 10 → 14 jobs (Time Mage, Ninja, Samurai, Geomancer); 42 → 70 abilities (Time/Throw/Draw Out/Elemental/Holy Sword/Limit/extra chemist goods + 7 monster arts); 24 → 44 equipment (+ chapter-4 shop tier); 7 → 14 monsters (chocobos, panther, dragon, mindflare, ghoul, hydra); 7 → 13 statuses (Haste, Stop, Sleep, Protect, Shell, Regen); new systems — facing/back attacks, poaching, dispatch propositions, soldier hiring, Move-Find-Item caches; new story recruit Aveline (Holy Sword).
 
 ## 1. Source checklist → where it appears
 
@@ -11,24 +13,34 @@
 | Guide content | In Crownfall Tactics |
 |---|---|
 | Prologue at Orbonne Monastery; cadets vs brigands | Battle 1 “Orbonne Monastery” (`src/data.js` → `BATTLES[0]`) |
-| Dorter Trade City urban battle | Battle 2 “Dorter Trade City” |
-| Sweegy Woods monster hunt (goblins) | Battle 3 “Sweegy Woods” (goblins + bomb) |
-| Lenalia Plateau height-dominated map | Battle 4 “Lenalia Plateau” (radial height map, archers on top) |
-| Chapter boss blocking the pass | Battle 5 “Fovoham Plains” — boss: Thunder Regent |
-| Lesalia / undercity route | Battle 6 “Lesalia Aqueducts” (water channels, thieves, cactuars) |
-| Riovanes Castle multi-level duel vs dark knight | Battle 7 “Riovanes Castle” — boss: Fell Knight |
-| Limberry Castle crypt fights | Battle 8 “Limberry Castle” (skeletons, crypt wizards) |
-| Nelveska Temple — Worker 7 New | Battle 9 “Nelveska Temple” — boss: Worker 7 (big toy machina) |
-| Murond holy place / final showdown | Battle 10 “Murond Necropolis” — final boss: The Heritor |
+| Dorter Trade City urban battle | Battle “Dorter Trade City” |
+| Sweegy Woods monster hunt (goblins) | Battle “Sweegy Woods” (goblins + bomb) |
+| Thieves Fort bandit nest | Battle “Thieves Fort” (thieves + goblin, hidden Power Wrist) |
+| Lenalia Plateau height-dominated map | Battle “Lenalia Plateau” (radial height map, archers on top) |
+| Zirekile Falls water map | Battle “Zirekile Falls” (mage wardens, water channels) |
+| Golgorand Execution Site rescue | Battle “Golgorand Execution Site” (executioners + guards) |
+| Chapter boss blocking the pass | Battle “Fovoham Plains” — boss: Thunder Regent |
+| Lesalia / undercity route | Battle “Lesalia Aqueducts” (water channels, thieves, cactuars; Aveline joins after) |
+| Riovanes Castle multi-level duel vs dark knight | Battle “Riovanes Castle” — boss: Fell Knight |
+| Yardow Fort City turncoat fight | Battle “Yardow Fort City” (ninja + time mage enemies) |
+| Limberry Castle crypt fights | Battle “Limberry Castle” (skeletons, crypt wizards) |
+| Bethla Garrison bridge stand | Battle “Bethla Garrison” (samurai saints, dragoon, summoner) |
+| Igros Castle last stand + red chocobo | Battle “Igros Castle” (geomancers, guard, Red Chocobo) |
+| Nelveska Temple — Worker 7 New | Battle “Nelveska Temple” — boss: Worker 7 (big toy machina) |
+| Murond Death City dragon gate | Battle “Murond Death City” — boss: Elder Dragon (mindflares, ghouls) |
+| Murond holy place / final showdown | Battle “Murond Necropolis” — final boss: The Heritor |
 | Deep Dungeon optional exploration | Errand “Deep Delve: Sluice Depths” (condensed multi-floor feel, high-level monsters) |
-| Poaching (monster → item) | Errand “Beast Hunt: Goblin Warren” (condensed: hunt pays pelts/gil + treasure) |
-| Propositions / dispatch missions | Tavern Errands system on the world map (3 errands, unlock by story progress) |
-| Secret characters (Cloud recruitment route) | Errand “Sky Pirate: Cloud's Debt” — Cloud joins the company on victory |
+| Poaching (monster → item) | Full table (`POACHES`, all 14 monsters): thieves always poach (25% rare incl. Barette, Dracula Mantle, Ninja Knife, Rubber Costume); others 30% common |
+| Propositions / dispatch missions | Tavern Hall: 5 commissions, send reserves for 1–3 battles, gil + goods + JP rewards |
+| Soldier hiring hall | Tavern Hall: 2 rotating recruit offers (squire/chemist, scaling level + cost), reserves + party promotion |
+| Move-Find-Item hidden treasure | `hidden` caches in 12 battles (no chest mesh; end a move on the tile) |
+| Secret characters (Cloud recruitment route) | Errand “Sky Pirate: Cloud's Debt” — Cloud joins with Limit arts (Braver, Cross Slash) |
+| Secret characters (Agrias/Holy Knight route) | Aveline the Oathsworn joins after Lesalia with Holy Sword arts (Hold, Blade) |
 | Zodiac stones / auracite plot driver | Retold as the Heritor's stones in intro, chapter cards, and epilogue |
 | 4-chapter structure | Chapters 1–4 with title cards between battles (`STORY.chapters`) |
 | World map with area transitions | World Map screen: 10 nodes + 3 errands, sequential unlock, area briefings |
 
-### Jobs (guide: Jobs — 20 generics + specials, condensed to 10)
+### Jobs (guide: Jobs — 20 generics + specials, condensed to 14)
 
 | Guide content | In Crownfall Tactics |
 |---|---|
@@ -36,19 +48,20 @@
 | Knight, Archer, Monk, Thief | Mid-tier unlocks via Squire JP (200/200/350/350) |
 | Black Mage (Wizard), White Mage (Priest) | Magical unlocks via Chemist JP (200 each) |
 | Dragoon (Lancer), Summoner | Advanced unlocks (Thief 400 / Black Mage 500 JP) |
+| Time Mage, Ninja, Samurai, Geomancer | Time Mage (Black Mage 250), Ninja (Thief 450), Samurai (Knight 450), Geomancer (Monk 300) |
 | Job unlock chart / JP requirements | `JOBS[].requires`, enforced in Party screen with visible costs |
 | Gender stat tilt (M: PA/HP, F: MA/MP) | `computeStats` in `src/state.js` |
 | Equipment restrictions per job | `JOBS[].equip` enforced in Party → equip dropdowns |
 
-Cut for scope (documented): Bard, Dancer, Calculator, Geomancer, Mediator, Mime, Ninja, Oracle, Samurai, Time Mage, Dark/Holy Knights. The kept 10 cover every tactical role (tank, ranged, healer, nuker, thief, jumper, summoner).
+Cut for scope (documented): Bard, Dancer, Calculator, Mediator, Mime, Oracle, Dark/Holy Knights. Each needs a bespoke subsystem (song/dance stacking, math targeting, Invite/breed, mimic queue, traps) disproportionate to its screen time; the kept 14 cover every tactical role.
 
-### Abilities & command sets (guide: 507 abilities / 116 sets, condensed to 42)
+### Abilities & command sets (guide: 507 abilities / 116 sets, condensed to 70)
 
-Representative kits per job, all working: Fundaments (Rush/Shout/First Aid), Item throws (Potion/Hi-Potion/Phoenix Down/Antidote), Knight breaks (Weapon/Shield/Helm) + Rend MP, Aim shots + Charge, Chakra/Pummel/Revive, Steal (gil/heart/helm), Fire/Blizzard/Thunder/Flare, Cure/Cura/Raise/Esuna, Jump/Pierce, Ifrit/Shiva/Ramuh, plus enemy-only arts (Tail Swipe, Goblin Punch, Dark Holy, Stone Gaze). Full list in `src/data.js` → `ABILITIES`.
+Representative kits per job, all working: Fundaments, Item throws (+ Ether/Remedy/X-Potion/Elixir), Knight breaks + Rend MP, Aim shots + Charge, Punch Art, Steal, Black/White/Time magic (Haste/Slow/Stop/Meteor/Shell/Regen), Draw Out (Kiyomori/Muramasa/Murasame), Throw arts, Elemental (Flame Burst/Falling Rock/Undertow), Jump/Pierce, Summons, Holy Sword (Hold/Blade), Limit (Braver/Cross Slash), plus enemy-only arts (Tail Swipe, Goblin Punch, Dark Holy, Stone Gaze, Choco Attack/Ball/Cure, Fire Breath, Mind Blast, Blood Suck, Triple Attack). Full list in `src/data.js` → `ABILITIES`.
 
-### Equipment & items (guide: 295 equipment records, condensed to 24)
+### Equipment & items (guide: 295 equipment records, condensed to 44)
 
-Swords (3), bows (2), rods (2), dagger, spear, gun, shields (2), robes/armor, hats/helms, boots (+1 Move), stat trinkets, and 4 consumables — all buyable/equippable/lootable (`EQUIPMENT`, Shop, Party, treasure chests). Consumable stock is shared and depletes in battle.
+Swords incl. Knight Sword, bows incl. Hunting Bow, rods, dagger, Ninja Knife, Short Katana, Battle Axe, spear, gun, shields (2), robes/armor incl. Rubber Costume, hats incl. Cachusha, boots (+1 Move), mantles/rings/trinkets incl. poach-only Barette and Dracula Mantle, and 8 consumables — all buyable/equippable/lootable/poachable (`EQUIPMENT`, Shop with chapter-4 tier, Party, chests, hidden caches, poaching). Consumable stock is shared and depletes in battle.
 
 ### Mechanics (guide: Mechanics/Statuses/Statistics)
 
@@ -61,7 +74,9 @@ Swords (3), bows (2), rods (2), dagger, spear, gun, shields (2), robes/armor, ha
 | Evasion | Per-unit evade + shield bonuses + height advantage; shown via MISS floaters |
 | Move / Jump / height maps | BFS range honoring jump; 0-height water/void blocked |
 | AoE shapes (single / plus / 3×3) | `aoeTiles`; hostile-only damage, ally-only healing |
-| Statuses | Poison, Slow, Daze, Disarm, Exposed, Charm + KO/crystal countdown (3 rounds) |
+| Statuses | Poison, Slow, Daze, Disarm, Exposed, Charm, Haste, Stop, Sleep, Protect, Shell, Regen + KO/crystal countdown (3 rounds) |
+| Facing / direction | Units face moves/actions (nose wedge + card arrow); back attacks +30%, unavoidable |
+| Reaction/Support/Move abilities | Not implemented as slots; signature effects folded into kits (Charge≈charging, poaching≈Secret Hunt, boots≈Move+1) |
 | XP / JP / level growth | Per-unit XP levels; per-job JP pools; JP buys abilities and job unlocks |
 | Zodiac compatibility | Omitted (see §3) |
 | Permadeath by crystallization | Adapted: KO'd units revive free after battle (see §3) |
@@ -89,7 +104,7 @@ Title screen (with generation date + model credit), Controls reference, Options 
 
 ## 4. Verification evidence
 
-- `npm test`: **17/17 pass** — data integrity, XP/JP/learning, CT order, formulas, movement, ability resolution, win/lose/boss-end rules, plus a **headless full-battle simulation** (real `Battle` controller, scripted player, stub renderer) that wins battle 1 in ~30 turns and applies rewards.
+- `npm test`: **34/34 pass, stable across repeated runs** — data integrity (incl. hidden caches, poach table, propositions), XP/JP/learning, CT order, formulas, movement, facing/backstab, statuses/wards, chemist goods, poaching odds, hiring/dispatches, ability resolution, win/lose/boss-end rules, plus a **headless full-battle simulation** (real `Battle` controller, scripted player, stub renderer) that wins battle 1 and applies rewards.
 - `npm run build`: clean Vite production build to `dist/` (~1.5 s), manifest ships and parses.
 - Browser runtime: **not verified in this sandbox** — Chromium (system and Playwright-bundled) SIGTRAPs on any page load here, including `about:blank`, so no in-browser smoke test was possible. The bundle's module graph resolves (proven by the build), all game logic is covered headlessly, and renderer failure paths degrade gracefully (WebGPU → WebGL2 → direct render, each guarded). First real-browser load should be treated as the remaining check.
 

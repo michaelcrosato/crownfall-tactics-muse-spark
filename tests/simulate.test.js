@@ -112,7 +112,7 @@ describe('headless battle simulation', () => {
 
   it('boss KO ends a boss battle immediately', () => {
     const campaign = newCampaign();
-    const def = BATTLES[4]; // Thunder Regent
+    const def = BATTLES.find((b) => b.id === 'b5_fovoham'); // Thunder Regent
     const battle = new Battle(def, {
       board: stubBoard(), physics: null, audio: stubAudio,
       campaign, isErrand: false, events: { emit: () => {} },

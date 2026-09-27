@@ -3,7 +3,7 @@ export const BUILD_INFO = {
   title: 'Crownfall Tactics',
   date: '2026-09-27',
   model: 'Muse Spark (Muse Code powered by Meta Muse Spark)',
-  version: '1.0.0',
+  version: '1.1.0',
 };
 
 // Quality presets: each meaningfully changes rendering + physics cost.

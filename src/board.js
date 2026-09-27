@@ -394,7 +394,7 @@ export class Board {
 }
 
 function monsterColor(unit) {
-  const colors = { goblin: 0x4d9b4d, bomb: 0xd24a2e, cactuar: 0x3f8f3f, skeleton: 0xd8d4c8, cockatrice: 0xc9a13b, worker7: 0x8a8f99, demon: 0x7a2e8f };
+  const colors = { goblin: 0x4d9b4d, bomb: 0xd24a2e, cactuar: 0x3f8f3f, skeleton: 0xd8d4c8, cockatrice: 0xc9a13b, worker7: 0x8a8f99, demon: 0x7a2e8f, chocobo: 0xe8c83a, red_chocobo: 0xc23a2e, panther: 0x3a3a4a, dragon: 0x3f7a3f, mindflare: 0x8a5adf, ghoul: 0xb8c4b8, hydra: 0x2e8a7a };
   return colors[unit.monster] ?? 0x777777;
 }
 
@@ -446,6 +446,8 @@ function buildToyFigure(color, trim, unit) {
     add(new THREE.BoxGeometry(0.12, 0.34, 0.14), cloth, 0.29, 0.55, 0);
     // head
     add(new THREE.BoxGeometry(0.3, 0.28, 0.28), skin, 0, 0.9, 0);
+    // facing nose: shows which way the toy looks (back attacks matter)
+    add(new THREE.BoxGeometry(0.1, 0.1, 0.12), trimM, 0, 0.9, 0.19);
     // job headgear
     if (unit.job === 'knight' || unit.job === 'dragoon') {
       add(new THREE.BoxGeometry(0.36, 0.14, 0.34), M(0x9aa0ad, 0.35), 0, 1.08, 0);

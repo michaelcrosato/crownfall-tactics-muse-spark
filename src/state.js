@@ -1,5 +1,5 @@
 // Campaign state: party, gil, inventory, job points, progression, deploy.
-import { JOBS, EQUIPMENT } from './data.js';
+import { JOBS, EQUIPMENT, PROPOSITIONS, HIRE_NAMES } from './data.js';
 
 let uid = 1;
 
@@ -59,7 +59,7 @@ export function computeStats(u) {
   u.maxHp = Math.max(10, hp);
   u.maxMp = Math.max(0, mp);
   u.pa = Math.max(1, pa); u.ma = Math.max(1, ma);
-  u.sp = Math.max(3, sp - (u.statuses.daze ? 2 : 0) - (u.statuses.slow ? 2 : 0));
+  u.sp = Math.max(3, sp - (u.statuses.daze ? 2 : 0) - (u.statuses.slow ? 2 : 0) + (u.statuses.haste ? 3 : 0));
   u.move = Math.max(2, move);
   u.jump = job.jump;
   u.evade = u.statuses.exposed ? 0 : evade;
@@ -112,6 +112,13 @@ export const LEARN_COSTS = {
   cure: 150, cura: 300, raise: 300, esuna: 150,
   jump_strike: 300, pierce: 120,
   ifrit: 400, shiva: 400, ramuh: 400,
+  haste: 150, slow2: 150, stop: 250, meteor: 500,
+  throw_knife: 120, shuriken: 180, shadowstrike: 250,
+  kiyomori: 200, muramasa: 300, murasame: 250,
+  flame_burst: 150, rock_throw: 150, undertow: 180,
+  shell: 200, regen: 250,
+  holy_hold: 250, holy_blade: 300, braver: 300, cross_slash: 300,
+  ether: 200, remedy: 220, x_potion: 350, elixir: 500,
 };
 
 export function learnCost(abilityId) {
@@ -145,15 +152,95 @@ export function newCampaign() {
   mira.hp = mira.maxHp; mira.mp = mira.maxMp;
   bram.hp = bram.maxHp; bram.mp = bram.maxMp;
   return {
-    version: 1,
+    version: 2,
     battleIndex: 0,
     errandsDone: [],
     gil: 500,
     inventory: { potion_item: 3, phoenix_item: 1, antidote_item: 1 },
     party: [rowan, mira, bram],
     reserves: [],
+    dispatches: [],
+    hireOffers: [genHireOffer(0, 0), genHireOffer(0, 1)],
     result: null,
   };
+}
+
+export function hireCost(battleIndex) {
+  return 250 + battleIndex * 120;
+}
+
+export function genHireOffer(battleIndex, slot) {
+  const name = HIRE_NAMES[(battleIndex * 2 + slot * 7 + Math.floor(Math.random() * HIRE_NAMES.length)) % HIRE_NAMES.length];
+  return {
+    name,
+    job: Math.random() < 0.5 ? 'squire' : 'chemist',
+    level: 1 + Math.floor(battleIndex / 3),
+    gender: Math.random() < 0.5 ? 'M' : 'F',
+  };
+}
+
+export function hireRecruit(campaign, offerIndex) {
+  const offer = (campaign.hireOffers || [])[offerIndex];
+  if (!offer) return null;
+  const cost = hireCost(campaign.battleIndex);
+  if (campaign.gil < cost) return null;
+  campaign.gil -= cost;
+  const u = makeUnit(offer.name, offer.job, offer.level, { gender: offer.gender });
+  if (!campaign.reserves) campaign.reserves = [];
+  campaign.reserves.push(u);
+  campaign.hireOffers[offerIndex] = genHireOffer(campaign.battleIndex, Math.floor(Math.random() * 24));
+  return u;
+}
+
+// Send a reserve unit on a proposition. Returns error string or null.
+export function sendDispatch(campaign, uid, propId) {
+  const prop = PROPOSITIONS.find((p) => p.id === propId);
+  if (!prop) return 'Unknown commission.';
+  if (!campaign.dispatches) campaign.dispatches = [];
+  if (campaign.dispatches.some((d) => d.uid === uid)) return 'Already away.';
+  const idx = (campaign.reserves || []).findIndex((u) => u.uid === uid);
+  if (idx < 0) return 'Unit must wait in reserves.';
+  const u = campaign.reserves[idx];
+  if (u.level < prop.minLevel) return `Needs level ${prop.minLevel}.`;
+  campaign.reserves.splice(idx, 1);
+  campaign.dispatches.push({ propId, uid: u.uid, name: u.name, job: u.job, level: u.level, battlesLeft: prop.days, snapshot: u });
+  return null;
+}
+
+// Advance all dispatches by one completed battle. Returns completed reports.
+export function tickDispatches(campaign) {
+  const done = [];
+  if (!campaign.dispatches) campaign.dispatches = [];
+  for (const d of campaign.dispatches) {
+    d.battlesLeft--;
+  }
+  const remaining = [];
+  for (const d of campaign.dispatches) {
+    if (d.battlesLeft > 0) {
+      remaining.push(d);
+      continue;
+    }
+    const prop = PROPOSITIONS.find((p) => p.id === d.propId);
+    if (!prop) continue;
+    campaign.gil += prop.gil;
+    for (const item of prop.items || []) {
+      const e = EQUIPMENT[item];
+      if (!e) continue;
+      if (e.slot === 'item') {
+        campaign.inventory[item] = (campaign.inventory[item] || 0) + 1;
+      } else {
+        if (!campaign.stores) campaign.stores = [];
+        if (!campaign.stores.includes(item)) campaign.stores.push(item);
+      }
+    }
+    const u = d.snapshot;
+    u.jp[u.job] = (u.jp[u.job] || 0) + prop.jp;
+    if (!campaign.reserves) campaign.reserves = [];
+    campaign.reserves.push(u);
+    done.push({ name: d.name, prop: prop.name, gil: prop.gil, items: prop.items || [], jp: prop.jp });
+  }
+  campaign.dispatches = remaining;
+  return done;
 }
 
 export function serializeCampaign(c) {
@@ -165,5 +252,13 @@ export function applyLoadedCampaign(c) {
   for (const u of [...(c.party || []), ...(c.reserves || [])]) {
     if (u.uid >= uid) uid = u.uid + 1;
   }
+  for (const d of c.dispatches || []) {
+    if (d.snapshot && d.snapshot.uid >= uid) uid = d.snapshot.uid + 1;
+  }
+  // Migrate pre-1.1 saves.
+  if (!c.dispatches) c.dispatches = [];
+  if (!c.hireOffers) c.hireOffers = [genHireOffer(c.battleIndex || 0, 0), genHireOffer(c.battleIndex || 0, 1)];
+  if (!c.reserves) c.reserves = [];
+  c.version = 2;
   return c;
 }

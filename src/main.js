@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { BUILD_INFO, QUALITY_PRESETS, AUTO_TUNING } from './config.js';
 import { loadOptions, saveOptions, loadSave, writeSave, clearSave } from './save.js';
 import { AudioEngine } from './audio.js';
-import { BATTLES, ERRANDS, EQUIPMENT, JOBS, STORY, RECRUIT_CLOUD } from './data.js';
-import { newCampaign, applyLoadedCampaign, computeStats, jobUnlocked, learnAbility } from './state.js';
+import { BATTLES, ERRANDS, EQUIPMENT, JOBS, STORY, RECRUIT_CLOUD, RECRUIT_AVELINE } from './data.js';
+import { newCampaign, applyLoadedCampaign, computeStats, jobUnlocked, learnAbility, hireRecruit, sendDispatch, tickDispatches } from './state.js';
 import { Battle } from './battle.js';
 import { Board, installWaterFactory } from './board.js';
 import { CameraRig } from './camera.js';
@@ -272,6 +272,7 @@ class Game {
       },
       onShop: () => this.toShop(),
       onParty: () => this.toParty(),
+      onTavern: () => this.toTavern(),
       onOptions: () => this.ui.showOptions(this.options, {
         onChange: (k, v) => { this.options[k] = v; saveOptions(this.options); this.applyOptions(); this.audio.setVolume(this.options.volume); this.audio.setMuted(this.options.muted); },
         onBack: () => this.toWorld(),
@@ -338,6 +339,30 @@ class Game {
         if (ok) writeSave(this.campaign);
         return ok;
       },
+      onPromote: (uid) => {
+        if (this.campaign.party.length >= 8) return false;
+        const idx = (this.campaign.reserves || []).findIndex((x) => x.uid === uid);
+        if (idx < 0) return false;
+        this.campaign.party.push(this.campaign.reserves.splice(idx, 1)[0]);
+        writeSave(this.campaign);
+        return true;
+      },
+      onBack: () => this.toWorld(),
+    });
+  }
+
+  toTavern() {
+    this.ui.showTavern(this.campaign, {
+      onHire: (i) => {
+        const u = hireRecruit(this.campaign, i);
+        if (u) writeSave(this.campaign);
+        return u;
+      },
+      onDispatch: (uid, propId) => {
+        const err = sendDispatch(this.campaign, uid, propId);
+        if (!err) writeSave(this.campaign);
+        return err;
+      },
       onBack: () => this.toWorld(),
     });
   }
@@ -402,11 +427,12 @@ class Game {
     bus.on('unitChanged', () => {
       if (this.battle.active) this.hud.setTurn(this.battle.active);
     });
-    bus.on('treasure', ({ unit, item }) => {
+    bus.on('treasure', ({ unit, item, hidden }) => {
       const name = EQUIPMENT[item] ? EQUIPMENT[item].name : item;
       this.treasureWon.push(item);
-      this.hud.logMsg(`${unit.name} found ${name}!`);
-      this.ui.toast(`${unit.name} found ${name}!`);
+      const msg = hidden ? `${unit.name} sniffed out a hidden cache: ${name}!` : `${unit.name} found ${name}!`;
+      this.hud.logMsg(msg);
+      this.ui.toast(msg);
     });
     bus.on('crystal', ({ unit }) => {
       this.hud.logMsg(`${unit.name} crystallized...`);
@@ -444,6 +470,7 @@ class Game {
     }
     const rewards = battle.applyRewards();
     this.campaign.gil += rewards.gil;
+    for (const item of battle.poached || []) this.treasureWon.push(item);
     this.audio.playMusic('victory');
     if (isErrand && errand) {
       if (!this.campaign.errandsDone.includes(errand.id)) this.campaign.errandsDone.push(errand.id);
@@ -451,7 +478,13 @@ class Game {
         this.recruitCloud();
       }
     } else {
+      if (def.id === 'b6_lesalia' && !this.campaign.party.some((u) => u.name === 'Aveline')) {
+        this.recruitAveline();
+      }
       this.campaign.battleIndex = Math.min(BATTLES.length, this.campaign.battleIndex + 1);
+    }
+    for (const r of tickDispatches(this.campaign)) {
+      this.ui.toast(`${r.name} returned: +${r.gil} G, +${r.jp} JP (${r.prop})`);
     }
     writeSave(this.campaign);
     this.state = 'results';
@@ -482,12 +515,28 @@ class Game {
     import('./state.js').then(({ makeUnit }) => {
       const c = makeUnit(RECRUIT_CLOUD.name, 'squire', 12, { gender: 'M', brave: 75, faith: 45 });
       c.equipment.weapon = 'mythril_sword';
+      c.learned = { braver: true, cross_slash: true };
       computeStats(c);
       c.hp = c.maxHp; c.mp = c.maxMp;
       if (this.campaign.party.length < 8) this.campaign.party.push(c);
       else this.campaign.reserves.push(c);
       writeSave(this.campaign);
-      this.ui.toast('Cloud joined the company!');
+      this.ui.toast('Cloud joined the company — Limit arts learned!');
+    });
+  }
+
+  recruitAveline() {
+    import('./state.js').then(({ makeUnit }) => {
+      const a = makeUnit(RECRUIT_AVELINE.name, 'knight', 11, { gender: 'F', brave: 72, faith: 65 });
+      a.equipment.weapon = 'mythril_sword';
+      a.equipment.body = 'mythril_armor';
+      a.learned = { holy_hold: true, holy_blade: true };
+      computeStats(a);
+      a.hp = a.maxHp; a.mp = a.maxMp;
+      if (this.campaign.party.length < 8) this.campaign.party.push(a);
+      else this.campaign.reserves.push(a);
+      writeSave(this.campaign);
+      this.ui.toast('Aveline the Oathsworn joined the company!');
     });
   }
 

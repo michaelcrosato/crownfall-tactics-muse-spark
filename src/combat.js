@@ -1,7 +1,7 @@
 // Battle rules: CT/AT turn flow, hit/damage formulas, status ticks, enemy AI.
 // Faithful in shape to FFT (CT 0-100, Speed ticks, charge times, evasion,
 // Brave/Faith scaling, KO countdown) with numbers tuned for short battles.
-import { ABILITIES, MONSTERS, JOBS } from './data.js';
+import { ABILITIES, MONSTERS, JOBS, POACHES } from './data.js';
 import { computeStats } from './state.js';
 
 // --- Turn flow (CT) ---
@@ -57,7 +57,19 @@ export function physDamage(att, def, ability) {
   dmg *= 0.92 + Math.random() * 0.16;
   if (att.charged) dmg *= 2;
   if (att.statuses.disarm) dmg *= 0.6;
+  if (def.statuses.protect) dmg *= 0.6;
   return Math.max(1, Math.floor(dmg));
+}
+
+// Facing: units record (fx, fz) from their last move or action.
+// Attacking from behind the defender's facing: +30% damage, ignores evasion.
+export function isBackstab(att, def) {
+  const fx = def.fx || 0, fz = def.fz == null ? 1 : def.fz;
+  const dx = att.x - def.x, dy = att.y - def.y;
+  if (dx === 0 && dy === 0) return false;
+  const len = Math.hypot(dx, dy);
+  const dot = (dx / len) * fx + (dy / len) * fz;
+  return dot < -0.3;
 }
 
 export function attWeaponPower(att) {
@@ -70,6 +82,7 @@ export function magicDamage(att, def, ability) {
   dmg *= 0.85 + ((att.faith || 60) / 100) * 0.5;
   dmg *= 1 - Math.min(0.4, ((def.faith || 50) / 100) * 0.4);
   dmg *= 0.92 + Math.random() * 0.16;
+  if (def.statuses.shell) dmg *= 0.6;
   return Math.max(1, Math.floor(dmg));
 }
 
@@ -190,11 +203,16 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
       if (!list.length) events.push({ type: 'whiff', x: tx, y: ty });
       for (const t of list) {
         const hd = (heights[t.y]?.[t.x] || 1) - (heights[att.y]?.[att.x] || 1);
-        const h = hitChance(att, t, ability, hd);
+        const back = isBackstab(att, t);
+        const h = back ? 100 : hitChance(att, t, ability, hd);
         if (Math.random() * 100 < h) {
-          const dmg = ability.kind === 'jump' ? Math.floor(att.pa * ability.power * 1.6) : physDamage(att, t, ability);
+          let dmg = ability.kind === 'jump' ? Math.floor(att.pa * ability.power * 1.6) : physDamage(att, t, ability);
+          if (back) {
+            dmg = Math.floor(dmg * 1.3);
+            events.push({ type: 'backstab', target: t.uid, x: t.x, y: t.y });
+          }
           damageUnit(t, dmg, events);
-          events.push({ type: 'damage', target: t.uid, amount: dmg, x: t.x, y: t.y, element: 'none', sfx: ability.sfx });
+          events.push({ type: 'damage', target: t.uid, amount: dmg, x: t.x, y: t.y, element: ability.element || 'none', sfx: ability.sfx });
           if (ability.debuff) {
             t.statuses[ability.debuff] = ability.debuff === 'exposed' ? 3 : 2;
             events.push({ type: 'status', target: t.uid, status: ability.debuff });
@@ -203,6 +221,12 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
             t.mp = Math.max(0, t.mp - 12);
             events.push({ type: 'drain', target: t.uid, amount: 12 });
           }
+          if (ability.drain) {
+            const fed = Math.max(1, Math.floor(dmg * ability.drain));
+            att.hp = Math.min(att.maxHp, att.hp + fed);
+            events.push({ type: 'heal', target: att.uid, amount: fed, x: att.x, y: att.y, sfx: 'cure' });
+          }
+          maybePoach(att, t, events);
         } else {
           events.push({ type: 'miss', target: t.uid, x: t.x, y: t.y, sfx: 'miss' });
         }
@@ -210,7 +234,8 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
       att.charged = false;
       break;
     }
-    case 'magic': {
+    case 'magic':
+    case 'iaido': {
       const list = targets.filter(hostile);
       if (!list.length) events.push({ type: 'whiff', x: tx, y: ty });
       for (const t of list) {
@@ -219,6 +244,22 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
           const dmg = magicDamage(att, t, ability);
           damageUnit(t, dmg, events);
           events.push({ type: 'damage', target: t.uid, amount: dmg, x: t.x, y: t.y, element: ability.element || 'none', sfx: ability.sfx });
+          maybePoach(att, t, events);
+        } else {
+          events.push({ type: 'miss', target: t.uid, x: t.x, y: t.y, sfx: 'miss' });
+        }
+      }
+      break;
+    }
+    case 'ailment': {
+      const list = targets.filter(hostile);
+      if (!list.length) events.push({ type: 'whiff', x: tx, y: ty });
+      for (const t of list) {
+        const h = Math.max(20, Math.min(95, 70 + Math.floor((att.ma || 5) / 2) - Math.floor(((t.faith ?? 50)) / 4)));
+        if (Math.random() * 100 < h) {
+          t.statuses[ability.status] = ability.status === 'slow' ? 2 : 2;
+          events.push({ type: 'status', target: t.uid, status: ability.status, x: t.x, y: t.y, sfx: ability.sfx });
+          computeStats(t);
         } else {
           events.push({ type: 'miss', target: t.uid, x: t.x, y: t.y, sfx: 'miss' });
         }
@@ -230,7 +271,8 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
       if (!list.length && !ability.cleanse) events.push({ type: 'whiff', x: tx, y: ty });
       for (const t of list) {
         if (ability.cleanse) {
-          for (const s of ['poison', 'slow', 'daze', 'disarm']) delete t.statuses[s];
+          for (const s of ['poison', 'slow', 'daze', 'disarm', 'stop', 'sleep', 'charm']) delete t.statuses[s];
+          computeStats(t);
           events.push({ type: 'cleanse', target: t.uid, x: t.x, y: t.y, sfx: ability.sfx });
         } else {
           let amt = healAmount(att, ability);
@@ -246,12 +288,20 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
     case 'item': {
       const t = allUnits.find((u) => u.alive && u.x === tx && u.y === ty && friendly(u));
       if (!t) { events.push({ type: 'whiff', x: tx, y: ty }); break; }
-      if (abilityId === 'antidote') {
+      if (ability.restoreMp) {
+        t.mp = Math.min(t.maxMp, t.mp + ability.power);
+        events.push({ type: 'restoreMp', target: t.uid, amount: ability.power, x: t.x, y: t.y, sfx: 'potion' });
+      } else if (ability.cleanse) {
+        for (const s of ['poison', 'slow', 'daze', 'disarm', 'stop', 'sleep', 'charm']) delete t.statuses[s];
+        computeStats(t);
+        events.push({ type: 'cleanse', target: t.uid, x: t.x, y: t.y, sfx: 'potion' });
+      } else if (abilityId === 'antidote') {
         delete t.statuses.poison;
         events.push({ type: 'cleanse', target: t.uid, x: t.x, y: t.y, sfx: 'potion' });
       } else {
-        t.hp = Math.min(t.maxHp, t.hp + ability.power);
-        events.push({ type: 'heal', target: t.uid, amount: ability.power, x: t.x, y: t.y, sfx: 'potion' });
+        const amt = abilityId === 'elixir' ? t.maxHp - t.hp : ability.power;
+        t.hp = Math.min(t.maxHp, t.hp + amt);
+        events.push({ type: 'heal', target: t.uid, amount: amt, x: t.x, y: t.y, sfx: 'potion' });
       }
       break;
     }
@@ -276,6 +326,15 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
       } else if (abilityId === 'charge') {
         att.charged = true;
         events.push({ type: 'buff', target: att.uid, status: 'charge', sfx: 'bow' });
+      } else if (ability.status) {
+        // Ranged wards (Haste, Kiyomori, Shell, Regen): allies in the area.
+        const list = targets.filter(friendly);
+        if (!list.length) events.push({ type: 'whiff', x: tx, y: ty });
+        for (const t of list) {
+          t.statuses[ability.status] = 3;
+          computeStats(t);
+          events.push({ type: 'buff', target: t.uid, status: ability.status, x: t.x, y: t.y, sfx: ability.sfx });
+        }
       }
       break;
     }
@@ -308,6 +367,10 @@ export function resolveAbility(att, abilityId, tx, ty, allUnits, heights, battle
 }
 
 export function damageUnit(t, dmg, events) {
+  if (t.statuses.sleep) {
+    delete t.statuses.sleep; // pain wakes sleepers
+    computeStats(t);
+  }
   t.hp -= dmg;
   if (t.hp <= 0) {
     t.hp = 0;
@@ -317,6 +380,25 @@ export function damageUnit(t, dmg, events) {
   }
 }
 
+// Poaching (guide: poaching record): felling a monster may yield its goods.
+export function maybePoach(att, t, events) {
+  if (!t.monster || t.alive || t._poached) return;
+  const table = POACHES[t.monster];
+  if (!table) return;
+  t._poached = true;
+  if (att.side !== 'player') return; // only the company keeps trophies
+  const thief = att.job === 'thief';
+  const roll = Math.random();
+  let item = null, rare = false;
+  if (thief) {
+    rare = roll < 0.25;
+    item = rare ? table.rare : table.common;
+  } else if (roll < 0.3) {
+    item = table.common;
+  }
+  if (item) events.push({ type: 'poach', target: t.uid, killer: att.name, item, rare, x: t.x, y: t.y, sfx: 'pickup' });
+}
+
 // Start-of-turn status processing. Returns events + whether unit loses turn.
 export function startOfTurn(u, events) {
   let skip = false;
@@ -324,6 +406,19 @@ export function startOfTurn(u, events) {
     delete u.statuses.charm;
     skip = true;
     events.push({ type: 'charmed', target: u.uid });
+  }
+  if (u.statuses.stop) {
+    skip = true;
+    events.push({ type: 'stopped', target: u.uid });
+  }
+  if (u.statuses.sleep) {
+    skip = true;
+    events.push({ type: 'asleep', target: u.uid });
+  }
+  if (u.statuses.regen && u.alive) {
+    const amt = Math.max(3, Math.floor(u.maxHp * 0.08));
+    u.hp = Math.min(u.maxHp, u.hp + amt);
+    events.push({ type: 'heal', target: u.uid, amount: amt, x: u.x, y: u.y, sfx: 'cure' });
   }
   if (u.statuses.poison && u.alive) {
     const dmg = Math.max(2, Math.floor(u.maxHp * 0.08));
@@ -385,12 +480,14 @@ export function aiTakeTurn(unit, battle) {
       if (ab.kind === 'item') continue; // enemies don't use shared stock
       // candidate targets
       let spots = [];
-      if (ab.kind === 'buff' || (ab.kind === 'heal' && ab.range === 0)) {
+      if ((ab.kind === 'buff' && ab.range === 0) || (ab.kind === 'heal' && ab.range === 0)) {
         spots = [{ x: pos.x, y: pos.y }];
-      } else if (ab.kind === 'heal' || ab.kind === 'revive') {
+      } else if (ab.kind === 'heal' || ab.kind === 'revive' || (ab.kind === 'buff' && ab.range > 0)) {
         const pool = ab.kind === 'revive'
           ? battle.units.filter((u) => !u.alive && u.koTimer > 0 && u.side === unit.side)
-          : allies.filter((a) => a.hp < a.maxHp * 0.85);
+          : ab.kind === 'buff'
+            ? allies.filter((a) => !a.statuses[ab.status])
+            : allies.filter((a) => a.hp < a.maxHp * 0.85);
         for (const a of pool) {
           if (manhattan(pos.x, pos.y, a.x, a.y) <= ab.range) spots.push({ x: a.x, y: a.y });
         }
@@ -435,18 +532,21 @@ function aiScore(unit, ab, pos, spot, foes, allies, hurtAlly, deadAlly) {
   let s = Math.random() * 6;
   const foeThere = foes.find((f) => f.x === spot.x && f.y === spot.y);
   const allyThere = allies.find((a) => a.x === spot.x && a.y === spot.y);
-  if ((ab.kind === 'phys' || ab.kind === 'magic' || ab.kind === 'jump') && foeThere) {
+  if ((ab.kind === 'phys' || ab.kind === 'magic' || ab.kind === 'jump' || ab.kind === 'iaido') && foeThere) {
     s += 30 + ab.power * 20;
     if (ab.aoe) s += 12;
     if (foeThere.hp < 20) s += 15; // finish kills
     s -= manhattan(pos.x, pos.y, unit.x, unit.y); // prefer less movement
+  } else if (ab.kind === 'ailment' && foeThere) {
+    s += 24;
+    if (!foeThere.statuses[ab.status]) s += 8;
   } else if (ab.kind === 'heal' && allyThere && allyThere.hp < allyThere.maxHp * 0.8) {
     s += 45 - (allyThere.hp / allyThere.maxHp) * 30;
     if (allyThere.uid === (hurtAlly && hurtAlly.uid)) s += 10;
   } else if (ab.kind === 'revive' && deadAlly && spot.x === deadAlly.x && spot.y === deadAlly.y) {
     s += 60;
   } else if (ab.kind === 'buff') {
-    s += 8;
+    s += ab.range > 0 && allyThere ? 16 : 8;
   } else if (ab.kind === 'steal' && foeThere) {
     s += 12;
   } else {

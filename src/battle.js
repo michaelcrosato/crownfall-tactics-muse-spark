@@ -1,13 +1,13 @@
 // Battle controller: turn loop, player input phases, animation sequencing,
 // win/lose, rewards. UI-agnostic: talks to the screen layer via callbacks.
-import { ABILITIES, MONSTERS, JOBS } from './data.js';
+import { ABILITIES, MONSTERS, JOBS, EQUIPMENT } from './data.js';
 import { makeUnit, computeStats, grantXpJp } from './state.js';
 import {
   tickCT, predictOrder, spendTurn, resolveAbility, startOfTurn, endOfTurn,
   tickKoTimers, moveRange, pathTo, manhattan, aiTakeTurn,
 } from './combat.js';
 
-const ITEM_OF = { potion: 'potion_item', hipotion: 'hipotion_item', phoenix: 'phoenix_item', antidote: 'antidote_item' };
+const ITEM_OF = { potion: 'potion_item', hipotion: 'hipotion_item', phoenix: 'phoenix_item', antidote: 'antidote_item', ether: 'ether_item', remedy: 'remedy_item', x_potion: 'x_potion_item', elixir: 'elixir_item' };
 
 export class Battle {
   constructor(def, opts) {
@@ -31,6 +31,8 @@ export class Battle {
     this.moveKeys = new Map();
     this.stolenGil = 0;
     this.chests = new Map(); // key -> { x, y, item, mesh }
+    this.hidden = new Map(); // key -> { x, y, item } (Move-Find-Item caches)
+    this.poached = []; // item ids won by poaching this battle
     this.consumeItem = (abilityId) => {
       const item = ITEM_OF[abilityId];
       if (!item || !this.campaign) return;
@@ -51,6 +53,8 @@ export class Battle {
     // player units
     this.units = [];
     for (const pu of deployed) {
+      pu.fx = 0; pu.fz = -1; // face the enemy lines
+      pu._poached = false;
       pu.side = 'player';
       pu.ct = 20 + Math.floor(Math.random() * 20);
       pu.statuses = {}; pu.buffs = {}; pu.charged = false;
@@ -70,6 +74,9 @@ export class Battle {
     for (const t of this.def.treasure || []) {
       const mesh = this.board.addChest(t.x, t.y);
       this.chests.set(t.y * this.w + t.x, { ...t, mesh });
+    }
+    for (const t of this.def.hidden || []) {
+      this.hidden.set(t.y * this.w + t.x, { ...t });
     }
     this.audio.playMusic(this.def.music || 'battle');
   }
@@ -94,6 +101,7 @@ export class Battle {
       if (e.boss) { u.maxHp = Math.floor(u.maxHp * 1.6); u.hp = u.maxHp; u.pa += 2; }
     }
     u.x = e.x; u.y = e.y;
+    u.fx = 0; u.fz = 1; // face the player lines
     u.ct = 20 + Math.floor(Math.random() * 30);
     return u;
   }
@@ -198,6 +206,7 @@ export class Battle {
     this.board.clearAllHighlights();
     const path = pathTo(u, x, y, this.heights, this.w, this.d, this.occupied(u.uid));
     for (const step of path) {
+      this.faceToward(u, step.x, step.y);
       u.x = step.x; u.y = step.y;
       this.audio.playSfx('step');
       await this.board.moveUnitMesh(u.uid, step.x, step.y, true);
@@ -257,7 +266,9 @@ export class Battle {
       case 'phys':
       case 'magic':
       case 'jump':
+      case 'iaido':
       case 'steal':
+      case 'ailment':
         return true; // ground-targetable; hits enemies in AoE
       case 'heal':
         return !occ || (occ.alive && occ.side === u.side);
@@ -266,10 +277,18 @@ export class Battle {
       case 'revive':
         return !!occ && !occ.alive && occ.koTimer > 0 && occ.side === u.side;
       case 'buff':
-        return x === u.x && y === u.y;
+        if (ab.range === 0) return x === u.x && y === u.y;
+        return true; // wards: ground-targetable, bless allies in AoE
       default:
         return true;
     }
+  }
+
+  faceToward(u, tx, ty) {
+    const dx = tx - u.x, dy = ty - u.y;
+    if (dx === 0 && dy === 0) return;
+    if (Math.abs(dx) >= Math.abs(dy)) { u.fx = Math.sign(dx); u.fz = 0; }
+    else { u.fx = 0; u.fz = Math.sign(dy); }
   }
 
   async doTarget(x, y) {
@@ -278,6 +297,7 @@ export class Battle {
     if (!ab || !this.validTarget(u, ab, x, y)) return false;
     this.phase = 'animating';
     this.board.clearAllHighlights();
+    this.faceToward(u, x, y);
     this.board.faceTile(u.uid, x, y);
     // caster hop / projectile flourish
     if (ab.kind === 'jump') {
@@ -321,6 +341,7 @@ export class Battle {
     if (plan.move) {
       const path = pathTo(u, plan.move.x, plan.move.y, this.heights, this.w, this.d, this.occupied(u.uid));
       for (const step of path) {
+        this.faceToward(u, step.x, step.y);
         u.x = step.x; u.y = step.y;
         await this.board.moveUnitMesh(u.uid, step.x, step.y, true);
       }
@@ -328,6 +349,7 @@ export class Battle {
     }
     if (plan.ability) {
       const ab = ABILITIES[plan.ability];
+      this.faceToward(u, plan.tx, plan.ty);
       this.board.faceTile(u.uid, plan.tx, plan.ty);
       this.events.emit('message', { text: `${u.name} uses ${ab.name}!` });
       await this.wait(300);
@@ -342,17 +364,37 @@ export class Battle {
   checkChest(u) {
     const k = u.y * this.w + u.x;
     const c = this.chests.get(k);
-    if (!c) return;
-    this.chests.delete(k);
-    if (c.mesh && c.mesh.parent) c.mesh.parent.remove(c.mesh);
-    if (u.side === 'player') {
-      const inv = this.campaign.inventory;
-      inv[c.item] = (inv[c.item] || 0) + 1;
-      this.events.emit('treasure', { unit: u, item: c.item });
+    if (c) {
+      this.chests.delete(k);
+      if (c.mesh && c.mesh.parent) c.mesh.parent.remove(c.mesh);
+      if (u.side === 'player') {
+        this.grantItem(c.item);
+        this.events.emit('treasure', { unit: u, item: c.item });
+        this.audio.playSfx('pickup');
+        this.board.spawnRing(u.x, u.y, 0xffd76a);
+      } else {
+        this.events.emit('message', { text: `${u.name} smashed a chest!` });
+      }
+    }
+    const h = this.hidden.get(k);
+    if (h && u.side === 'player') {
+      this.hidden.delete(k);
+      this.grantItem(h.item);
+      this.events.emit('treasure', { unit: u, item: h.item, hidden: true });
       this.audio.playSfx('pickup');
-      this.board.spawnRing(u.x, u.y, 0xffd76a);
+      this.board.spawnRing(u.x, u.y, 0x7ae8ff);
+    }
+  }
+
+  grantItem(item) {
+    const e = EQUIPMENT[item];
+    if (!e) return;
+    if (e.slot === 'item') {
+      const inv = this.campaign.inventory;
+      inv[item] = (inv[item] || 0) + 1;
     } else {
-      this.events.emit('message', { text: `${u.name} smashed a chest!` });
+      if (!this.campaign.stores) this.campaign.stores = [];
+      if (!this.campaign.stores.includes(item)) this.campaign.stores.push(item);
     }
   }
 
@@ -407,7 +449,7 @@ export class Battle {
           await this.wait(180);
           break;
         case 'buff':
-          this.events.emit('floater', { x: t.x, y: t.y, text: e.status === 'charge' ? 'CHARGED!' : 'RALLY!', cls: 'buff' });
+          this.events.emit('floater', { x: t.x, y: t.y, text: e.status === 'charge' ? 'CHARGED!' : e.status === 'shout' ? 'RALLY!' : statusLabel(e.status), cls: 'buff' });
           if (e.sfx) this.audio.playSfx(e.sfx);
           await this.wait(180);
           break;
@@ -424,6 +466,34 @@ export class Battle {
           this.events.emit('floater', { x: t.x, y: t.y, text: 'CHARMED', cls: 'status' });
           await this.wait(200);
           break;
+        case 'stopped':
+          this.events.emit('floater', { x: t.x, y: t.y, text: 'STOPPED', cls: 'status' });
+          await this.wait(200);
+          break;
+        case 'asleep':
+          this.events.emit('floater', { x: t.x, y: t.y, text: 'ASLEEP', cls: 'status' });
+          await this.wait(200);
+          break;
+        case 'backstab':
+          this.events.emit('floater', { x: e.x, y: e.y, text: 'BACK ATTACK!', cls: 'ko' });
+          this.events.emit('message', { text: 'A back attack! (+30%, unavoidable)' });
+          await this.wait(150);
+          break;
+        case 'restoreMp':
+          this.events.emit('floater', { x: e.x, y: e.y, text: `+${e.amount} MP`, cls: 'buff' });
+          if (e.sfx) this.audio.playSfx(e.sfx);
+          await this.wait(180);
+          break;
+        case 'poach': {
+          this.grantItem(e.item);
+          this.poached.push(e.item);
+          const name = EQUIPMENT[e.item] ? EQUIPMENT[e.item].name : e.item;
+          this.events.emit('floater', { x: e.x, y: e.y, text: e.rare ? `RARE POACH: ${name}!` : `Poached: ${name}`, cls: 'gil' });
+          this.events.emit('message', { text: `${e.killer} poached ${name}${e.rare ? ' (RARE!)' : ''}.` });
+          if (e.sfx) this.audio.playSfx(e.sfx);
+          await this.wait(220);
+          break;
+        }
         case 'whiff':
           this.board.spawnRing(e.x, e.y, 0xcccccc);
           await this.wait(150);
@@ -491,6 +561,6 @@ function elementColor(el) {
 }
 
 function statusLabel(s) {
-  const m = { slow: 'SLOW', daze: 'DAZE', disarm: 'DISARM', exposed: 'EXPOSED', charm: 'CHARM', poison: 'POISON' };
+  const m = { slow: 'SLOW', daze: 'DAZE', disarm: 'DISARM', exposed: 'EXPOSED', charm: 'CHARM', poison: 'POISON', haste: 'HASTE!', stop: 'STOP!', sleep: 'SLEEP', protect: 'PROTECT', shell: 'SHELL', regen: 'REGEN' };
   return m[s] || s.toUpperCase();
 }

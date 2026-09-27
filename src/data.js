@@ -19,7 +19,7 @@ export const JOBS = {
     move: 3, jump: 3, pa: 4, ma: 4, sp: 6, hp: 38, mp: 14,
     growth: { hp: 6, mp: 3, pa: 0.5, ma: 0.6, sp: 0.15 },
     equip: ['gun', 'dagger', 'cloth', 'hat'],
-    abilities: ['attack', 'potion', 'hipotion', 'phoenix', 'antidote'],
+    abilities: ['attack', 'potion', 'hipotion', 'phoenix', 'antidote', 'ether', 'remedy', 'x_potion', 'elixir'],
   },
   knight: {
     id: 'knight', name: 'Knight', requires: { job: 'squire', jp: 200 },
@@ -67,7 +67,7 @@ export const JOBS = {
     move: 3, jump: 3, pa: 2, ma: 8, sp: 6, hp: 36, mp: 26,
     growth: { hp: 5, mp: 5, pa: 0.2, ma: 1.1, sp: 0.12 },
     equip: ['rod', 'cloth', 'hat'],
-    abilities: ['attack', 'cure', 'cura', 'raise', 'esuna'],
+    abilities: ['attack', 'cure', 'cura', 'raise', 'esuna', 'shell', 'regen'],
   },
   dragoon: {
     id: 'dragoon', name: 'Dragoon', requires: { job: 'thief', jp: 400 },
@@ -84,6 +84,38 @@ export const JOBS = {
     growth: { hp: 5, mp: 6, pa: 0.2, ma: 1.4, sp: 0.08 },
     equip: ['rod', 'cloth', 'hat'],
     abilities: ['attack', 'ifrit', 'shiva', 'ramuh'],
+  },
+  timemage: {
+    id: 'timemage', name: 'Time Mage', requires: { job: 'blackmage', jp: 250 },
+    desc: 'Bends the clock: haste, slow, stop, and falling stars.',
+    move: 3, jump: 3, pa: 2, ma: 9, sp: 6, hp: 34, mp: 28,
+    growth: { hp: 5, mp: 5, pa: 0.2, ma: 1.2, sp: 0.12 },
+    equip: ['rod', 'cloth', 'hat'],
+    abilities: ['attack', 'haste', 'slow2', 'stop', 'meteor'],
+  },
+  ninja: {
+    id: 'ninja', name: 'Ninja', requires: { job: 'thief', jp: 450 },
+    desc: 'Fastest blade alive. Throws steel across the field.',
+    move: 4, jump: 4, pa: 7, ma: 3, sp: 10, hp: 44, mp: 10,
+    growth: { hp: 7, mp: 2, pa: 1.0, ma: 0.4, sp: 0.3 },
+    equip: ['ninja', 'dagger', 'sword', 'cloth', 'hat'],
+    abilities: ['attack', 'throw_knife', 'shuriken', 'shadowstrike'],
+  },
+  samurai: {
+    id: 'samurai', name: 'Samurai', requires: { job: 'knight', jp: 450 },
+    desc: 'Draws the iaido: ward, ruin, and restore in one breath.',
+    move: 3, jump: 3, pa: 8, ma: 6, sp: 6, hp: 50, mp: 16,
+    growth: { hp: 8, mp: 3, pa: 1.0, ma: 0.8, sp: 0.12 },
+    equip: ['katana', 'sword', 'armor', 'helm'],
+    abilities: ['attack', 'kiyomori', 'muramasa', 'murasame'],
+  },
+  geomancer: {
+    id: 'geomancer', name: 'Geomancer', requires: { job: 'monk', jp: 300 },
+    desc: 'The terrain itself answers: flame, stone, and undertow.',
+    move: 3, jump: 3, pa: 7, ma: 5, sp: 6, hp: 48, mp: 14,
+    growth: { hp: 8, mp: 3, pa: 0.9, ma: 0.7, sp: 0.12 },
+    equip: ['sword', 'axe', 'shield', 'cloth', 'helm'],
+    abilities: ['attack', 'flame_burst', 'rock_throw', 'undertow'],
   },
 };
 
@@ -124,11 +156,49 @@ export const ABILITIES = {
   ifrit: { id: 'ifrit', name: 'Ifrit', kind: 'magic', element: 'fire', range: 5, aoe: 2, power: 1.4, mp: 18, ctr: 70, sfx: 'fire', desc: 'Summon: great fire over a wide area.' },
   shiva: { id: 'shiva', name: 'Shiva', kind: 'magic', element: 'ice', range: 5, aoe: 2, power: 1.4, mp: 18, ctr: 70, sfx: 'ice', desc: 'Summon: great ice over a wide area.' },
   ramuh: { id: 'ramuh', name: 'Ramuh', kind: 'magic', element: 'bolt', range: 5, aoe: 2, power: 1.4, mp: 18, ctr: 70, sfx: 'bolt', desc: 'Summon: great lightning over a wide area.' },
+  // time magic
+  haste: { id: 'haste', name: 'Haste', kind: 'buff', range: 4, aoe: 1, status: 'haste', mp: 8, ctr: 40, sfx: 'confirm', desc: 'Allies act sooner: +3 Speed (3 turns).' },
+  slow2: { id: 'slow2', name: 'Slow', kind: 'ailment', range: 4, aoe: 1, status: 'slow', mp: 8, ctr: 40, sfx: 'cancel', desc: 'Enemies drag: Slow (2 turns).' },
+  stop: { id: 'stop', name: 'Stop', kind: 'ailment', range: 3, aoe: 0, status: 'stop', mp: 12, ctr: 50, sfx: 'cancel', desc: 'Freeze a foe solid (2 turns).' },
+  meteor: { id: 'meteor', name: 'Meteor', kind: 'magic', element: 'none', range: 4, aoe: 2, power: 1.6, mp: 20, ctr: 70, sfx: 'bolt', desc: 'Call down falling stars, wide area.' },
+  // ninja throw
+  throw_knife: { id: 'throw_knife', name: 'Throw: Knife', kind: 'phys', range: 5, aoe: 0, power: 0.9, evade: true, sfx: 'bow', desc: 'Hurl a knife across the field.' },
+  shuriken: { id: 'shuriken', name: 'Shuriken', kind: 'phys', range: 6, aoe: 0, power: 0.7, evade: true, sfx: 'bow', desc: 'Long star-throw, light damage.' },
+  shadowstrike: { id: 'shadowstrike', name: 'Shadowstrike', kind: 'phys', range: 1, aoe: 0, power: 1.5, evade: true, sfx: 'hit', desc: 'Strike from the dark: heavy damage.' },
+  // samurai draw out
+  kiyomori: { id: 'kiyomori', name: 'Draw Out: Kiyomori', kind: 'buff', range: 3, aoe: 1, status: 'protect', mp: 8, ctr: 30, sfx: 'confirm', desc: 'Ward allies: halved physical damage (3 turns).' },
+  muramasa: { id: 'muramasa', name: 'Draw Out: Muramasa', kind: 'iaido', element: 'none', range: 3, aoe: 0, power: 1.7, mp: 10, ctr: 40, sfx: 'hit', desc: 'Cursed draw: heavy MA-scaling damage.' },
+  murasame: { id: 'murasame', name: 'Draw Out: Murasame', kind: 'heal', range: 3, aoe: 1, power: 1.4, mp: 10, ctr: 40, sfx: 'cure', desc: 'Soothing draw: restore allies HP.' },
+  // geomancer elemental
+  flame_burst: { id: 'flame_burst', name: 'Flame Burst', kind: 'magic', element: 'fire', range: 4, aoe: 1, power: 1.1, mp: 8, ctr: 40, sfx: 'fire', desc: 'The earth exhales fire.' },
+  rock_throw: { id: 'rock_throw', name: 'Falling Rock', kind: 'magic', element: 'none', range: 4, aoe: 0, power: 1.4, mp: 6, ctr: 40, sfx: 'hit', desc: 'Drop a boulder on one foe.' },
+  undertow: { id: 'undertow', name: 'Undertow', kind: 'magic', element: 'ice', range: 4, aoe: 1, power: 1.0, mp: 8, ctr: 40, sfx: 'ice', desc: 'Icy water drags foes down.' },
+  // white magic, continued
+  shell: { id: 'shell', name: 'Shell', kind: 'buff', range: 4, aoe: 1, status: 'shell', mp: 10, ctr: 40, sfx: 'confirm', desc: 'Ward allies: halved magic damage (3 turns).' },
+  regen: { id: 'regen', name: 'Regen', kind: 'buff', range: 4, aoe: 1, status: 'regen', mp: 10, ctr: 40, sfx: 'cure', desc: 'Allies mend each turn (3 turns).' },
+  // holy sword (Aveline)
+  holy_hold: { id: 'holy_hold', name: 'Holy Sword: Hold', kind: 'ailment', element: 'holy', range: 3, aoe: 0, status: 'stop', mp: 10, ctr: 40, sfx: 'bolt', desc: 'Pin a foe with holy light (Stop).' },
+  holy_blade: { id: 'holy_blade', name: 'Holy Sword: Blade', kind: 'phys', element: 'holy', range: 2, aoe: 0, power: 1.6, evade: true, sfx: 'hit', desc: 'A radiant two-tile slash.' },
+  // limit (Cloud)
+  braver: { id: 'braver', name: 'Limit: Braver', kind: 'phys', range: 1, aoe: 0, power: 1.8, evade: false, sfx: 'hit', desc: 'Leaping limit blow. Unavoidable.' },
+  cross_slash: { id: 'cross_slash', name: 'Limit: Cross Slash', kind: 'phys', range: 1, aoe: 0, power: 1.1, debuff: 'slow', evade: true, sfx: 'hit', desc: 'Cross-cut that Slows.' },
+  // chemist items, continued
+  ether: { id: 'ether', name: 'Ether', kind: 'item', range: 4, aoe: 0, power: 30, restoreMp: true, price: 300, sfx: 'potion', desc: 'Throw: restore 30 MP.' },
+  remedy: { id: 'remedy', name: 'Remedy', kind: 'item', range: 4, aoe: 0, power: 0, price: 250, cleanse: true, sfx: 'potion', desc: 'Throw: cure all ailments.' },
+  x_potion: { id: 'x_potion', name: 'X-Potion', kind: 'item', range: 4, aoe: 0, power: 150, price: 500, sfx: 'potion', desc: 'Throw: restore 150 HP.' },
+  elixir: { id: 'elixir', name: 'Elixir', kind: 'item', range: 4, aoe: 0, power: 999, price: 1000, sfx: 'potion', desc: 'Throw: fully restore HP.' },
   // enemy-only
   tail_swipe: { id: 'tail_swipe', name: 'Tail Swipe', kind: 'phys', range: 1, aoe: 0, power: 0.9, evade: true, sfx: 'hit', desc: 'Monster attack.' },
   goblin_punch: { id: 'goblin_punch', name: 'Goblin Punch', kind: 'phys', range: 1, aoe: 0, power: 1.0, evade: true, sfx: 'hit', desc: 'Gremlin fists.' },
   dark_holy: { id: 'dark_holy', name: 'Dark Holy', kind: 'magic', element: 'holy', range: 5, aoe: 1, power: 1.3, mp: 10, ctr: 50, sfx: 'bolt', desc: 'Wicked holy light.' },
   stone_gaze: { id: 'stone_gaze', name: 'Stone Gaze', kind: 'phys', range: 3, aoe: 0, power: 0.4, debuff: 'slow', evade: true, sfx: 'miss', desc: 'Petrifying look that slows.' },
+  choco_attack: { id: 'choco_attack', name: 'Choco Attack', kind: 'phys', range: 1, aoe: 0, power: 1.2, evade: true, sfx: 'hit', desc: 'Furious beaking.' },
+  choco_ball: { id: 'choco_ball', name: 'Choco Ball', kind: 'phys', range: 4, aoe: 0, power: 1.0, evade: true, sfx: 'bow', desc: 'A hurled chocobo egg.' },
+  choco_cure: { id: 'choco_cure', name: 'Choco Cure', kind: 'heal', range: 3, aoe: 0, power: 1.2, sfx: 'cure', desc: 'Chocobo first aid.' },
+  fire_breath: { id: 'fire_breath', name: 'Fire Breath', kind: 'magic', element: 'fire', range: 3, aoe: 1, power: 1.2, mp: 8, ctr: 40, sfx: 'fire', desc: 'Dragon breath.' },
+  mind_blast: { id: 'mind_blast', name: 'Mind Blast', kind: 'ailment', range: 3, aoe: 0, status: 'sleep', sfx: 'cancel', desc: 'Psionic lullaby (Sleep).' },
+  blood_suck: { id: 'blood_suck', name: 'Blood Suck', kind: 'phys', range: 1, aoe: 0, power: 0.8, drain: 0.5, evade: true, sfx: 'hit', desc: 'Feed and mend.' },
+  triple_attack: { id: 'triple_attack', name: 'Triple Attack', kind: 'phys', range: 1, aoe: 0, power: 1.4, evade: true, sfx: 'hit', desc: 'Three heads strike as one.' },
 };
 
 export const EQUIPMENT = {
@@ -159,6 +229,24 @@ export const EQUIPMENT = {
   hipotion_item: { id: 'hipotion_item', name: 'Hi-Potion', slot: 'item', ability: 'hipotion', price: 150, desc: 'Restores 70 HP.' },
   phoenix_item: { id: 'phoenix_item', name: 'Phoenix Down', slot: 'item', ability: 'phoenix', price: 200, desc: 'Revives a KO ally.' },
   antidote_item: { id: 'antidote_item', name: 'Antidote', slot: 'item', ability: 'antidote', price: 40, desc: 'Cures Poison.' },
+  ether_item: { id: 'ether_item', name: 'Ether', slot: 'item', ability: 'ether', price: 300, desc: 'Restores 30 MP.' },
+  remedy_item: { id: 'remedy_item', name: 'Remedy', slot: 'item', ability: 'remedy', price: 250, desc: 'Cures all ailments.' },
+  x_potion_item: { id: 'x_potion_item', name: 'X-Potion', slot: 'item', ability: 'x_potion', price: 500, desc: 'Restores 150 HP.' },
+  elixir_item: { id: 'elixir_item', name: 'Elixir', slot: 'item', ability: 'elixir', price: 1000, desc: 'Fully restores HP.' },
+  // chapter 3+ wares
+  knight_sword: { id: 'knight_sword', name: 'Knight Sword', slot: 'weapon', type: 'sword', pa: 10, price: 5000, desc: 'A lordly blade, heavy and true.' },
+  ninja_knife: { id: 'ninja_knife', name: 'Ninja Knife', slot: 'weapon', type: 'ninja', pa: 6, price: 1500, desc: 'Silent, balanced for throwing.' },
+  short_katana: { id: 'short_katana', name: 'Short Katana', slot: 'weapon', type: 'katana', pa: 8, ma: 1, price: 2200, desc: 'A quick iaido blade.' },
+  battle_axe: { id: 'battle_axe', name: 'Battle Axe', slot: 'weapon', type: 'axe', pa: 9, price: 1800, desc: 'Crude, heavy, final.' },
+  hunting_bow: { id: 'hunting_bow', name: 'Hunting Bow', slot: 'weapon', type: 'bow', pa: 9, price: 2600, desc: 'For big game and bigger knights.' },
+  feather_hat: { id: 'feather_hat', name: 'Feather Hat', slot: 'head', type: 'hat', mp: 12, price: 1200, desc: '+12 MP.' },
+  cachusha: { id: 'cachusha', name: 'Cachusha', slot: 'head', type: 'hat', mp: 16, hp: 8, price: 2500, desc: '+16 MP, +8 HP.' },
+  wizard_robe: { id: 'wizard_robe', name: 'Wizard Robe', slot: 'body', type: 'cloth', mp: 16, price: 1800, desc: '+16 MP.' },
+  rubber_costume: { id: 'rubber_costume', name: 'Rubber Costume', slot: 'body', type: 'cloth', hp: 20, price: 2200, desc: '+20 HP. Squeaks.' },
+  feather_mantle: { id: 'feather_mantle', name: 'Feather Mantle', slot: 'acc', evade: 10, price: 1500, desc: '+10 evade.' },
+  dracula_mantle: { id: 'dracula_mantle', name: 'Dracula Mantle', slot: 'acc', pa: 2, evade: 6, price: 3000, desc: '+2 PA, +6 evade.' },
+  defense_ring: { id: 'defense_ring', name: 'Defense Ring', slot: 'acc', hp: 15, price: 2000, desc: '+15 HP.' },
+  barette: { id: 'barette', name: 'Barette', slot: 'acc', ma: 2, mp: 8, price: 2800, desc: '+2 MA, +8 MP.' },
 };
 
 // height maps use single chars; legend per battle (h = height, w = water/blocked)
@@ -181,6 +269,7 @@ export const BATTLES = [
       { job: 'archer', name: 'Poacher', x: 6, y: 2, level: 1 },
     ],
     treasure: [{ x: 6, y: 6, item: 'potion_item' }],
+    hidden: [{ x: 0, y: 0, item: 'potion_item' }],
   },
   {
     id: 'b2_dorter', name: 'Dorter Trade City', chapter: 1, boss: false, music: 'battle',
@@ -211,6 +300,23 @@ export const BATTLES = [
       { monster: 'bomb', name: 'Red Bomb', x: 4, y: 3, level: 4 },
     ],
     treasure: [{ x: 8, y: 4, item: 'hipotion_item' }],
+    hidden: [{ x: 4, y: 4, item: 'antidote_item' }],
+  },
+  {
+    id: 'b4_thieves', name: 'Thieves Fort', chapter: 1, boss: false, music: 'battle',
+    brief: 'The woodland fort shelters the goblin-smugglers. Roust them.',
+    objective: 'Defeat all enemies.',
+    deployMax: 4, gil: 400,
+    map: { w: 9, d: 8, theme: 'woods', heights: H(['111111111', '111111111', '112111211', '112111211', '111111111', '111111111', '111111111', '111111111']) },
+    player: [{ x: 1, y: 6 }, { x: 3, y: 6 }, { x: 5, y: 6 }, { x: 7, y: 6 }],
+    enemies: [
+      { job: 'thief', name: 'Fort Rogue', x: 2, y: 1, level: 4 },
+      { job: 'thief', name: 'Fort Rogue', x: 4, y: 1, level: 4 },
+      { job: 'thief', name: 'Fort Rogue', x: 6, y: 1, level: 5 },
+      { monster: 'goblin', name: 'Smuggler Pet', x: 4, y: 3, level: 5 },
+    ],
+    treasure: [{ x: 8, y: 7, item: 'phoenix_item' }],
+    hidden: [{ x: 0, y: 0, item: 'power_wrist' }],
   },
   {
     id: 'b4_lenalia', name: 'Lenalia Plateau', chapter: 2, boss: false, music: 'battle',
@@ -228,6 +334,38 @@ export const BATTLES = [
     treasure: [{ x: 0, y: 4, item: 'leather_boots' }],
   },
   {
+    id: 'b_zirekile', name: 'Zirekile Falls', chapter: 2, boss: false, music: 'battle',
+    brief: 'Rogue mages dam the falls to flood the low road. Break the dam-ward.',
+    objective: 'Defeat all enemies.',
+    deployMax: 4, gil: 550,
+    map: { w: 9, d: 9, theme: 'aqueduct', heights: H(['111111111', '111010111', '111010111', '111010111', '111111111', '111010111', '111010111', '111010111', '111111111']) },
+    player: [{ x: 1, y: 8 }, { x: 3, y: 8 }, { x: 5, y: 8 }, { x: 7, y: 8 }],
+    enemies: [
+      { job: 'blackmage', name: 'Dam Warden', x: 4, y: 1, level: 6 },
+      { job: 'whitemage', name: 'Dam Warden', x: 4, y: 3, level: 6 },
+      { job: 'archer', name: 'Falls Bowman', x: 2, y: 1, level: 7 },
+      { job: 'archer', name: 'Falls Bowman', x: 6, y: 1, level: 7 },
+    ],
+    treasure: [{ x: 8, y: 4, item: 'ether_item' }],
+    hidden: [{ x: 0, y: 4, item: 'mythril_rod' }],
+  },
+  {
+    id: 'b_golgorand', name: 'Golgorand Execution Site', chapter: 2, boss: false, music: 'battle',
+    brief: 'Prisoners kneel at the block at dawn. The company arrives at midnight.',
+    objective: 'Defeat all enemies.',
+    deployMax: 4, gil: 650,
+    map: { w: 10, d: 8, theme: 'town', heights: H(['1111111111', '1221111221', '1221111221', '1111111111', '1111111111', '1111111111', '1111111111', '1111111111']) },
+    player: [{ x: 2, y: 6 }, { x: 4, y: 6 }, { x: 6, y: 6 }, { x: 8, y: 6 }],
+    enemies: [
+      { job: 'knight', name: 'Executioner', x: 4, y: 1, level: 8 },
+      { job: 'knight', name: 'Executioner', x: 6, y: 1, level: 8 },
+      { job: 'archer', name: 'Scaffold Guard', x: 5, y: 0, level: 7 },
+      { job: 'monk', name: 'Scaffold Guard', x: 5, y: 2, level: 8 },
+    ],
+    treasure: [{ x: 0, y: 0, item: 'mythril_shield' }],
+    hidden: [{ x: 9, y: 7, item: 'phoenix_item' }],
+  },
+  {
     id: 'b5_fovoham', name: 'Fovoham Plains', chapter: 2, boss: true, music: 'boss',
     brief: 'The Thunder Regent rides to crush the rebellion. End him.',
     objective: 'Defeat the Thunder Regent.',
@@ -235,12 +373,13 @@ export const BATTLES = [
     map: { w: 10, d: 8, theme: 'plains', heights: H(['1111111111', '1111111111', '1112222111', '1112222111', '1111111111', '1111111111', '1111111111', '1111111111']) },
     player: [{ x: 2, y: 6 }, { x: 4, y: 6 }, { x: 6, y: 6 }, { x: 8, y: 6 }],
     enemies: [
-      { job: 'knight', name: 'Thunder Regent', boss: true, x: 5, y: 1, level: 9, abilities: ['attack', 'thunder', 'break_weapon'] },
-      { job: 'monk', name: 'Regent Guard', x: 3, y: 2, level: 7 },
-      { job: 'archer', name: 'Regent Bowman', x: 7, y: 2, level: 7 },
-      { job: 'whitemage', name: 'Regent Cleric', x: 5, y: 3, level: 7 },
+      { job: 'knight', name: 'Thunder Regent', boss: true, x: 5, y: 1, level: 10, abilities: ['attack', 'thunder', 'break_weapon'] },
+      { job: 'monk', name: 'Regent Guard', x: 3, y: 2, level: 8 },
+      { job: 'archer', name: 'Regent Bowman', x: 7, y: 2, level: 8 },
+      { job: 'whitemage', name: 'Regent Cleric', x: 5, y: 3, level: 8 },
     ],
     treasure: [{ x: 9, y: 0, item: 'mythril_sword' }],
+    hidden: [{ x: 0, y: 7, item: 'remedy_item' }],
   },
   {
     id: 'b6_lesalia', name: 'Lesalia Aqueducts', chapter: 3, boss: false, music: 'battle',
@@ -250,11 +389,11 @@ export const BATTLES = [
     map: { w: 10, d: 9, theme: 'aqueduct', heights: H(['1111111111', '1111111111', '1110000111', '1110000111', '1110000111', '1110000111', '1111111111', '1111111111', '1111111111']) },
     player: [{ x: 1, y: 7 }, { x: 3, y: 7 }, { x: 5, y: 7 }, { x: 7, y: 7 }, { x: 9, y: 7 }],
     enemies: [
-      { job: 'thief', name: 'Canal Rat', x: 2, y: 1, level: 9 },
-      { job: 'thief', name: 'Canal Rat', x: 5, y: 1, level: 9 },
-      { job: 'thief', name: 'Canal Rat', x: 8, y: 1, level: 10 },
-      { monster: 'cactuar', name: 'Cactuar', x: 4, y: 4, level: 10 },
-      { monster: 'cactuar', name: 'Cactuar', x: 6, y: 4, level: 10 },
+      { job: 'thief', name: 'Canal Rat', x: 2, y: 1, level: 10 },
+      { job: 'thief', name: 'Canal Rat', x: 5, y: 1, level: 10 },
+      { job: 'thief', name: 'Canal Rat', x: 8, y: 1, level: 11 },
+      { monster: 'cactuar', name: 'Cactuar', x: 4, y: 4, level: 11 },
+      { monster: 'cactuar', name: 'Cactuar', x: 6, y: 4, level: 11 },
     ],
     treasure: [{ x: 0, y: 0, item: 'power_wrist' }],
   },
@@ -267,11 +406,28 @@ export const BATTLES = [
     player: [{ x: 2, y: 8 }, { x: 4, y: 8 }, { x: 6, y: 8 }, { x: 3, y: 9 }, { x: 5, y: 9 }],
     enemies: [
       { job: 'knight', name: 'Fell Knight', boss: true, x: 4, y: 1, level: 14, abilities: ['attack', 'dark_holy', 'break_helm'] },
-      { job: 'dragoon', name: 'Wyvern Guard', x: 2, y: 2, level: 11 },
-      { job: 'dragoon', name: 'Wyvern Guard', x: 6, y: 2, level: 11 },
-      { job: 'summoner', name: 'Court Summoner', x: 4, y: 3, level: 11 },
+      { job: 'dragoon', name: 'Wyvern Guard', x: 2, y: 2, level: 12 },
+      { job: 'dragoon', name: 'Wyvern Guard', x: 6, y: 2, level: 12 },
+      { job: 'summoner', name: 'Court Summoner', x: 4, y: 3, level: 12 },
     ],
     treasure: [{ x: 8, y: 9, item: 'mythril_armor' }],
+    hidden: [{ x: 8, y: 0, item: 'ether_item' }],
+  },
+  {
+    id: 'b_yardow', name: 'Yardow Fort City', chapter: 3, boss: false, music: 'battle',
+    brief: 'The fort city changed flags overnight. Its new masters fight dirty.',
+    objective: 'Defeat all enemies.',
+    deployMax: 5, gil: 950,
+    map: { w: 10, d: 9, theme: 'castle', heights: H(['2222222222', '2222222222', '2111111112', '2111111112', '2111111112', '2111111112', '2111111112', '2111111112', '1111111111']) },
+    player: [{ x: 1, y: 7 }, { x: 3, y: 7 }, { x: 5, y: 7 }, { x: 7, y: 7 }, { x: 9, y: 7 }],
+    enemies: [
+      { job: 'ninja', name: 'Fort Shadow', x: 3, y: 2, level: 13 },
+      { job: 'ninja', name: 'Fort Shadow', x: 7, y: 2, level: 13 },
+      { job: 'thief', name: 'Turncoat', x: 5, y: 3, level: 12 },
+      { job: 'timemage', name: 'Turncoat Mage', x: 5, y: 1, level: 13 },
+    ],
+    treasure: [{ x: 5, y: 0, item: 'ninja_knife' }],
+    hidden: [{ x: 0, y: 8, item: 'x_potion_item' }],
   },
   {
     id: 'b8_limberry', name: 'Limberry Castle', chapter: 4, boss: false, music: 'battle',
@@ -281,13 +437,45 @@ export const BATTLES = [
     map: { w: 10, d: 10, theme: 'crypt', heights: H(['1111111111', '1111111111', '1121111211', '1121111211', '1111111111', '1111111111', '1121111211', '1121111211', '1111111111', '1111111111']) },
     player: [{ x: 1, y: 8 }, { x: 3, y: 8 }, { x: 5, y: 8 }, { x: 7, y: 8 }, { x: 9, y: 8 }],
     enemies: [
-      { monster: 'skeleton', name: 'Skeleton', x: 2, y: 1, level: 13 },
-      { monster: 'skeleton', name: 'Skeleton', x: 5, y: 1, level: 13 },
-      { monster: 'skeleton', name: 'Skeleton', x: 8, y: 1, level: 14 },
-      { job: 'blackmage', name: 'Crypt Wizard', x: 3, y: 3, level: 14 },
-      { job: 'whitemage', name: 'Crypt Cleric', x: 7, y: 3, level: 14 },
+      { monster: 'skeleton', name: 'Skeleton', x: 2, y: 1, level: 14 },
+      { monster: 'skeleton', name: 'Skeleton', x: 5, y: 1, level: 14 },
+      { monster: 'skeleton', name: 'Skeleton', x: 8, y: 1, level: 15 },
+      { job: 'blackmage', name: 'Crypt Wizard', x: 3, y: 3, level: 15 },
+      { job: 'whitemage', name: 'Crypt Cleric', x: 7, y: 3, level: 15 },
     ],
     treasure: [{ x: 5, y: 0, item: 'rune_blade' }],
+  },
+  {
+    id: 'b_bethla', name: 'Bethla Garrison', chapter: 4, boss: false, music: 'battle',
+    brief: 'The garrison holds the sluice road. Its sword-saints hold the bridge.',
+    objective: 'Defeat all enemies.',
+    deployMax: 5, gil: 1100,
+    map: { w: 10, d: 9, theme: 'castle', heights: H(['1111111111', '1111111111', '1121111211', '1121111211', '1111111111', '1111111111', '1121111211', '1121111211', '1111111111']) },
+    player: [{ x: 1, y: 8 }, { x: 3, y: 8 }, { x: 5, y: 8 }, { x: 7, y: 8 }, { x: 9, y: 8 }],
+    enemies: [
+      { job: 'samurai', name: 'Bridge Saint', x: 4, y: 2, level: 16 },
+      { job: 'samurai', name: 'Bridge Saint', x: 6, y: 2, level: 16 },
+      { job: 'dragoon', name: 'Garrison Spear', x: 5, y: 1, level: 15 },
+      { job: 'summoner', name: 'Garrison Caller', x: 5, y: 4, level: 15 },
+    ],
+    treasure: [{ x: 9, y: 0, item: 'short_katana' }],
+    hidden: [{ x: 0, y: 8, item: 'remedy_item' }],
+  },
+  {
+    id: 'b_igros', name: 'Igros Castle', chapter: 4, boss: false, music: 'battle',
+    brief: 'The castle guard makes its last stand on the terraces — with red chocobos.',
+    objective: 'Defeat all enemies.',
+    deployMax: 5, gil: 1300,
+    map: { w: 9, d: 10, theme: 'castle', heights: H(['111111111', '111111111', '222222222', '222222222', '333333333', '333333333', '222222222', '222222222', '111111111', '111111111']) },
+    player: [{ x: 2, y: 8 }, { x: 4, y: 8 }, { x: 6, y: 8 }, { x: 3, y: 9 }, { x: 5, y: 9 }],
+    enemies: [
+      { job: 'geomancer', name: 'Terrace Warden', x: 3, y: 3, level: 17 },
+      { job: 'geomancer', name: 'Terrace Warden', x: 6, y: 3, level: 17 },
+      { job: 'knight', name: 'Castle Guard', x: 4, y: 5, level: 16 },
+      { monster: 'red_chocobo', name: 'Red Chocobo', x: 5, y: 2, level: 16 },
+    ],
+    treasure: [{ x: 0, y: 0, item: 'cachusha' }],
+    hidden: [{ x: 4, y: 0, item: 'elixir_item' }],
   },
   {
     id: 'b9_nelveska', name: 'Nelveska Temple', chapter: 4, boss: true, music: 'boss',
@@ -297,11 +485,29 @@ export const BATTLES = [
     map: { w: 10, d: 10, theme: 'ruin', heights: H(['2222222222', '2111111112', '2111111112', '2111221112', '2111221112', '2111221112', '2111111112', '2111111112', '2111111112', '2222222222']) },
     player: [{ x: 2, y: 8 }, { x: 4, y: 8 }, { x: 6, y: 8 }, { x: 3, y: 9 }, { x: 7, y: 9 }],
     enemies: [
-      { monster: 'worker7', name: 'Worker 7', boss: true, x: 5, y: 4, level: 18 },
-      { monster: 'cockatrice', name: 'Cockatrice', x: 2, y: 2, level: 15 },
-      { monster: 'cockatrice', name: 'Cockatrice', x: 8, y: 2, level: 15 },
+      { monster: 'worker7', name: 'Worker 7', boss: true, x: 5, y: 4, level: 19 },
+      { monster: 'cockatrice', name: 'Cockatrice', x: 2, y: 2, level: 17 },
+      { monster: 'cockatrice', name: 'Cockatrice', x: 8, y: 2, level: 17 },
     ],
     treasure: [{ x: 0, y: 0, item: 'magic_ring' }, { x: 9, y: 9, item: 'mythril_shield' }],
+    hidden: [{ x: 5, y: 0, item: 'elixir_item' }],
+  },
+  {
+    id: 'b_deathcity', name: 'Murond Death City', chapter: 4, boss: true, music: 'boss',
+    brief: 'The dead city wakes. An elder dragon coils around the gate.',
+    objective: 'Defeat the Elder Dragon.',
+    deployMax: 5, gil: 1500, bossName: 'Elder Dragon',
+    map: { w: 10, d: 10, theme: 'necropolis', heights: H(['1111111111', '1111111111', '1110000111', '1110000111', '1110000111', '1110000111', '1110000111', '1111111111', '1111111111', '1111111111']) },
+    player: [{ x: 1, y: 8 }, { x: 3, y: 8 }, { x: 5, y: 8 }, { x: 7, y: 8 }, { x: 9, y: 8 }],
+    enemies: [
+      { monster: 'dragon', name: 'Elder Dragon', boss: true, x: 5, y: 1, level: 19 },
+      { monster: 'mindflare', name: 'Mindflare', x: 2, y: 1, level: 18 },
+      { monster: 'mindflare', name: 'Mindflare', x: 8, y: 1, level: 18 },
+      { monster: 'ghoul', name: 'Ghoul', x: 1, y: 3, level: 18 },
+      { monster: 'ghoul', name: 'Ghoul', x: 9, y: 3, level: 18 },
+    ],
+    treasure: [{ x: 5, y: 9, item: 'dracula_mantle' }],
+    hidden: [{ x: 0, y: 0, item: 'barette' }],
   },
   {
     id: 'b10_necropolis', name: 'Murond Necropolis', chapter: 4, boss: true, music: 'boss',
@@ -311,10 +517,10 @@ export const BATTLES = [
     map: { w: 10, d: 10, theme: 'necropolis', heights: H(['1111111111', '1221111221', '1221111221', '1113333111', '1113333111', '1113333111', '1111111111', '1221111221', '1221111221', '1111111111']) },
     player: [{ x: 2, y: 8 }, { x: 4, y: 8 }, { x: 6, y: 8 }, { x: 3, y: 9 }, { x: 7, y: 9 }],
     enemies: [
-      { job: 'summoner', name: 'The Heritor', boss: true, x: 5, y: 4, level: 20, abilities: ['attack', 'ifrit', 'shiva', 'ramuh', 'dark_holy'] },
-      { monster: 'demon', name: 'Zodiac Warden', x: 3, y: 2, level: 17 },
-      { monster: 'demon', name: 'Zodiac Warden', x: 7, y: 2, level: 17 },
-      { job: 'knight', name: 'Oathsworn Blade', x: 5, y: 2, level: 16 },
+      { job: 'summoner', name: 'The Heritor', boss: true, x: 5, y: 4, level: 21, abilities: ['attack', 'ifrit', 'shiva', 'ramuh', 'dark_holy'] },
+      { monster: 'demon', name: 'Zodiac Warden', x: 3, y: 2, level: 19 },
+      { monster: 'demon', name: 'Zodiac Warden', x: 7, y: 2, level: 19 },
+      { job: 'knight', name: 'Oathsworn Blade', x: 5, y: 2, level: 18 },
     ],
     treasure: [],
   },
@@ -328,7 +534,45 @@ export const MONSTERS = {
   cockatrice: { pa: 8, ma: 4, sp: 7, hp: 60, mp: 10, move: 5, jump: 4, abilities: ['tail_swipe', 'stone_gaze'], color: 0xc9a13b },
   worker7: { pa: 14, ma: 6, sp: 4, hp: 220, mp: 20, move: 2, jump: 2, abilities: ['attack', 'thunder', 'pummel'], color: 0x8a8f99, big: true },
   demon: { pa: 12, ma: 8, sp: 7, hp: 110, mp: 20, move: 4, jump: 3, abilities: ['attack', 'dark_holy'], color: 0x7a2e8f },
+  chocobo: { pa: 7, ma: 3, sp: 8, hp: 40, mp: 10, move: 5, jump: 3, abilities: ['choco_attack', 'choco_cure'], color: 0xe8c83a },
+  red_chocobo: { pa: 10, ma: 4, sp: 9, hp: 60, mp: 14, move: 5, jump: 4, abilities: ['choco_attack', 'choco_ball'], color: 0xc23a2e },
+  panther: { pa: 9, ma: 1, sp: 10, hp: 44, mp: 0, move: 5, jump: 4, abilities: ['tail_swipe'], color: 0x3a3a4a },
+  dragon: { pa: 12, ma: 6, sp: 5, hp: 120, mp: 20, move: 4, jump: 3, abilities: ['tail_swipe', 'fire_breath'], color: 0x3f7a3f, big: true },
+  mindflare: { pa: 4, ma: 10, sp: 6, hp: 50, mp: 24, move: 3, jump: 3, abilities: ['mind_blast', 'thunder'], color: 0x8a5adf },
+  ghoul: { pa: 8, ma: 4, sp: 5, hp: 60, mp: 10, move: 3, jump: 3, abilities: ['blood_suck', 'goblin_punch'], color: 0xb8c4b8 },
+  hydra: { pa: 13, ma: 5, sp: 5, hp: 150, mp: 10, move: 3, jump: 3, abilities: ['triple_attack'], color: 0x2e8a7a, big: true },
 };
+
+// Poaching (guide: poaching record): monster family -> common / rare goods.
+// Thieves always poach (25% rare); others find commons 30% of the time.
+export const POACHES = {
+  goblin: { common: 'potion_item', rare: 'hipotion_item' },
+  bomb: { common: 'potion_item', rare: 'mythril_rod' },
+  cactuar: { common: 'antidote_item', rare: 'leather_boots' },
+  skeleton: { common: 'potion_item', rare: 'ether_item' },
+  cockatrice: { common: 'antidote_item', rare: 'feather_mantle' },
+  worker7: { common: 'hipotion_item', rare: 'spark_gun' },
+  demon: { common: 'ether_item', rare: 'rune_blade' },
+  chocobo: { common: 'phoenix_item', rare: 'hipotion_item' },
+  red_chocobo: { common: 'remedy_item', rare: 'barette' },
+  panther: { common: 'antidote_item', rare: 'leather_boots' },
+  dragon: { common: 'hipotion_item', rare: 'defense_ring' },
+  mindflare: { common: 'ether_item', rare: 'dracula_mantle' },
+  ghoul: { common: 'ether_item', rare: 'ninja_knife' },
+  hydra: { common: 'hipotion_item', rare: 'rubber_costume' },
+};
+
+// Propositions (guide: propositions record): dispatch a reserve unit for N
+// completed battles; they return with gil, goods, and JP.
+export const PROPOSITIONS = [
+  { id: 'p1', name: 'Guard the Caravan', desc: 'Bandits on the Dorter road. Easy coin.', days: 1, minLevel: 1, gil: 300, items: ['potion_item'], jp: 30 },
+  { id: 'p2', name: 'Cull the Direpack', desc: 'Wolves trouble the hamlets. Steel needed.', days: 2, minLevel: 5, gil: 600, items: ['hipotion_item'], jp: 60 },
+  { id: 'p3', name: 'Survey the Sluice', desc: 'Map the flood tunnels below Lesalia.', days: 2, minLevel: 5, gil: 400, items: ['ether_item'], jp: 60 },
+  { id: 'p4', name: 'Escort the Envoy', desc: 'A diplomat crosses the war zone. No mistakes.', days: 3, minLevel: 10, gil: 1000, items: ['phoenix_item'], jp: 100 },
+  { id: 'p5', name: 'Delve the Deep Gate', desc: 'Something old stirs below Bethla.', days: 3, minLevel: 14, gil: 800, items: ['elixir_item'], jp: 120 },
+];
+
+export const HIRE_NAMES = ['Ash', 'Bly', 'Corv', 'Dain', 'Elswyth', 'Fen', 'Greta', 'Hob', 'Isolde', 'Joren', 'Kell', 'Liora', 'Marek', 'Nessa', 'Odo', 'Petra', 'Quinn', 'Rosalind', 'Sten', 'Tilda', 'Ulric', 'Vesper', 'Wystan', 'Ysolde'];
 
 // Side content: tavern errands (dispatch-style bonus battles).
 export const ERRANDS = [
@@ -345,7 +589,8 @@ export const ERRANDS = [
         { monster: 'goblin', name: 'Goblin', x: 2, y: 1, level: 5 },
         { monster: 'goblin', name: 'Goblin', x: 4, y: 1, level: 5 },
         { monster: 'goblin', name: 'Goblin', x: 6, y: 1, level: 6 },
-        { monster: 'bomb', name: 'Red Bomb', x: 4, y: 2, level: 6 },
+        { monster: 'panther', name: 'Dire Panther', x: 4, y: 2, level: 6 },
+        { monster: 'bomb', name: 'Red Bomb', x: 5, y: 3, level: 6 },
       ],
       treasure: [{ x: 7, y: 0, item: 'hipotion_item' }],
     },
@@ -393,11 +638,17 @@ export const RECRUIT_CLOUD = {
   desc: 'Blond sky-pirate. Limitless attitude.',
 };
 
+export const RECRUIT_AVELINE = {
+  name: 'Aveline', job: 'knight', level: 11,
+  desc: 'Oathsworn holy blade, rescued at Lesalia.',
+};
+
 export const SHOP_STOCK = [
   'dagger', 'short_sword', 'longbow', 'rod', 'buckler', 'linen', 'cloth_hat',
   'potion_item', 'antidote_item', 'phoenix_item',
 ];
-export const SHOP_STOCK_CH3 = ['mythril_sword', 'mythril_bow', 'mythril_rod', 'spear', 'spark_gun', 'mythril_shield', 'mythril_armor', 'mythril_helm', 'leather_boots', 'power_wrist', 'magic_ring', 'hipotion_item'];
+export const SHOP_STOCK_CH3 = ['mythril_sword', 'mythril_bow', 'mythril_rod', 'spear', 'spark_gun', 'mythril_shield', 'mythril_armor', 'mythril_helm', 'leather_boots', 'power_wrist', 'magic_ring', 'hipotion_item', 'ether_item', 'remedy_item', 'ninja_knife', 'battle_axe', 'feather_hat', 'wizard_robe', 'feather_mantle', 'defense_ring', 'short_katana'];
+export const SHOP_STOCK_CH4 = ['knight_sword', 'hunting_bow', 'cachusha', 'rubber_costume', 'dracula_mantle', 'barette', 'x_potion_item', 'elixir_item'];
 
 export const STORY = {
   intro: [
